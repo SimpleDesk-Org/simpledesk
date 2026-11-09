@@ -27,12 +27,13 @@ const METADATA_SCHEMA_VERSION: u32 = 1;
 const SIGNATURE_SCHEMA_VERSION: u32 = 1;
 const SIGNATURE_ALGORITHM: &str = "ed25519";
 
+// SimpleDesk: only updates signed with the SimpleDesk key are installed, not RustDesk's.
 const TRUSTED_UPDATE_KEYS: &[TrustedUpdateKey] = &[TrustedUpdateKey {
-    key_id: "2026-ed25519-main",
+    key_id: "simpledesk-2026-ed25519",
     algorithm: SIGNATURE_ALGORITHM,
     public_key: [
-        52, 214, 32, 65, 191, 134, 137, 75, 157, 74, 67, 221, 150, 161, 118, 215, 218, 35, 236,
-        156, 127, 120, 133, 156, 197, 141, 37, 22, 47, 106, 181, 177,
+        88, 33, 115, 115, 37, 50, 198, 69, 239, 215, 103, 8, 189, 59, 240, 229, 137, 104, 13, 31,
+        122, 237, 29, 102, 197, 50, 243, 13, 39, 181, 194, 213,
     ],
 }];
 

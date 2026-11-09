@@ -4,7 +4,6 @@ use hbb_common::{
         engine::general_purpose::{URL_SAFE, URL_SAFE_NO_PAD},
         Engine as _,
     },
-    sodiumoxide::crypto::sign,
     ResultType,
 };
 use serde_derive::{Deserialize, Serialize};
@@ -21,24 +20,14 @@ pub struct CustomServer {
     pub relay: String,
 }
 
+// SimpleDesk: only the plain configuration is read. Configurations signed with RustDesk's
+// key (from their paid client generator) are no longer accepted.
 fn get_custom_server_from_config_string(s: &str) -> ResultType<CustomServer> {
     let tmp: String = s.chars().rev().collect();
-    const PK: &[u8; 32] = &[
-        88, 168, 68, 104, 60, 5, 163, 198, 165, 38, 12, 85, 114, 203, 96, 163, 70, 48, 0, 131, 57,
-        12, 46, 129, 83, 17, 84, 193, 119, 197, 130, 103,
-    ];
-    let pk = sign::PublicKey(*PK);
     let data = URL_SAFE_NO_PAD
         .decode(&tmp)
         .or_else(|_| URL_SAFE.decode(&tmp))?;
-    if let Ok(lic) = serde_json::from_slice::<CustomServer>(&data) {
-        return Ok(lic);
-    }
-    if let Ok(data) = sign::verify(&data, &pk) {
-        Ok(serde_json::from_slice::<CustomServer>(&data)?)
-    } else {
-        bail!("sign:verify failed");
-    }
+    Ok(serde_json::from_slice::<CustomServer>(&data)?)
 }
 
 pub fn get_custom_server_from_string(s: &str) -> ResultType<CustomServer> {

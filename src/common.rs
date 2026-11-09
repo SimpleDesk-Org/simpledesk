@@ -1096,11 +1096,15 @@ pub(crate) fn release_id_from_update_url(update_url: &str) -> ResultType<String>
         bail!("Update URL has no path: {}", update_url);
     };
     let segments = segments.collect::<Vec<_>>();
+    // SimpleDesk: releases come from the fork, see hbb_common::simpledesk::UPDATE_REPO.
+    let (owner, repo) = hbb_common::simpledesk::UPDATE_REPO
+        .split_once('/')
+        .unwrap_or_default();
     let release_id = match segments.as_slice() {
-        ["rustdesk", "rustdesk", "releases", "tag", release_id] => *release_id,
-        ["rustdesk", "rustdesk", "releases", "tag", release_id, ""] => *release_id,
+        [o, r, "releases", "tag", release_id] if *o == owner && *r == repo => *release_id,
+        [o, r, "releases", "tag", release_id, ""] if *o == owner && *r == repo => *release_id,
         _ => bail!(
-            "Update URL is not a RustDesk release tag URL: {}",
+            "Update URL is not a SimpleDesk release tag URL: {}",
             update_url
         ),
     };
@@ -1151,8 +1155,9 @@ fn clear_software_update_url() {
 }
 
 fn process_software_update_check_response(bytes: Bytes) -> ResultType<()> {
-    let resp: hbb_common::VersionCheckResponse = serde_json::from_slice(&bytes)?;
-    let response_url = resp.url;
+    // SimpleDesk: the answer of the GitHub API for the latest release.
+    let resp: hbb_common::LatestRelease = serde_json::from_slice(&bytes)?;
+    let response_url = resp.html_url;
     let release_id = release_id_from_update_url(&response_url)?;
     let latest_release_version = display_version_from_release_id(&release_id)?;
 
@@ -1174,10 +1179,10 @@ fn process_software_update_check_response(bytes: Bytes) -> ResultType<()> {
 }
 
 // No need to check `danger_accept_invalid_cert` for now.
-// Because the url is always `https://api.rustdesk.com/version/latest`.
+// SimpleDesk: the url is always the GitHub API for the latest release of the fork.
 #[tokio::main(flavor = "current_thread")]
 pub async fn do_check_software_update() -> hbb_common::ResultType<()> {
-    let (request, url) =
+    let (_request, url) =
         hbb_common::version_check_request(hbb_common::VER_TYPE_RUSTDESK_CLIENT.to_string());
     let proxy_conf = Config::get_socks();
     let tls_url = get_url_for_tls(&url, &proxy_conf);
@@ -1185,14 +1190,21 @@ pub async fn do_check_software_update() -> hbb_common::ResultType<()> {
     let is_tls_not_cached = tls_type.is_none();
     let tls_type = tls_type.unwrap_or(TlsType::Rustls);
     let client = create_http_client_async(tls_type, false);
-    let latest_release_response: ResultType<_> = match client.post(&url).json(&request).send().await
-    {
+    // GitHub answers a GET without a body and wants a User-Agent.
+    let latest_release = |client: reqwest::Client| {
+        client
+            .get(&url)
+            .header("User-Agent", "SimpleDesk")
+            .header("Accept", "application/vnd.github+json")
+            .send()
+    };
+    let latest_release_response: ResultType<_> = match latest_release(client).await {
         Ok(resp) => Ok((tls_type, resp)),
         Err(err) => {
             if is_tls_not_cached && err.is_request() {
                 let tls_type = TlsType::NativeTls;
                 let client = create_http_client_async(tls_type, false);
-                match client.post(&url).json(&request).send().await {
+                match latest_release(client).await {
                     Ok(resp) => Ok((tls_type, resp)),
                     Err(err) => Err(err.into()),
                 }
@@ -1295,6 +1307,10 @@ fn get_api_server_(api: String, custom: String) -> String {
         return api.to_owned();
     }
     let s0 = get_custom_rendezvous_server(custom);
+    // SimpleDesk: the built-in server has its API on https, so port 443 is enough.
+    if s0 == hbb_common::simpledesk::SERVER {
+        return hbb_common::simpledesk::API_SERVER.to_owned();
+    }
     if !s0.is_empty() {
         let s = crate::increase_port(&s0, -2);
         if s == s0 {
@@ -1308,7 +1324,8 @@ fn get_api_server_(api: String, custom: String) -> String {
             return format!("http://{}", s);
         }
     }
-    "https://admin.rustdesk.com".to_owned()
+    // SimpleDesk: never admin.rustdesk.com.
+    hbb_common::simpledesk::API_SERVER.to_owned()
 }
 
 #[inline]
@@ -2609,7 +2626,9 @@ pub fn read_custom_client(config: &str) {
         log::error!("Failed to decode custom client config");
         return;
     };
-    const KEY: &str = "5Qbwsde3unUcJBtrx9ZkvUmwFNoExHzpryHuPUdqlWM=";
+    // SimpleDesk: custom client configs are signed with the SimpleDesk key, not RustDesk's,
+    // so their paid generator no longer applies and we can build our own.
+    const KEY: &str = "wEX48ckCqAzr9yZ1bBpN13LuPXOZ1lvulGmJF/Ljjjg=";
     let Some(pk) = get_rs_pk(KEY) else {
         log::error!("Failed to parse public key of custom client");
         return;
@@ -2705,9 +2724,11 @@ pub fn get_builtin_option(key: &str) -> String {
         .unwrap_or_default()
 }
 
+/// SimpleDesk: never a RustDesk "custom client". Renaming the app must not hide our own
+/// update check or show a "Powered by RustDesk" link.
 #[inline]
 pub fn is_custom_client() -> bool {
-    get_app_name() != "RustDesk"
+    false
 }
 
 pub fn verify_login(_raw: &str, _id: &str) -> bool {
@@ -3119,10 +3140,11 @@ mod tests {
     }
 
     #[test]
-    fn parses_stable_rustdesk_release_url() {
-        let update_url = "https://github.com/rustdesk/rustdesk/releases/tag/v1.4.6";
+    fn parses_stable_simpledesk_release_url() {
+        let repo = hbb_common::simpledesk::UPDATE_REPO;
+        let update_url = format!("https://github.com/{repo}/releases/tag/v1.4.6");
 
-        assert_eq!(release_id_from_update_url(update_url).unwrap(), "v1.4.6");
+        assert_eq!(release_id_from_update_url(&update_url).unwrap(), "v1.4.6");
         assert_eq!(display_version_from_release_id("v1.4.6").unwrap(), "1.4.6");
         assert_eq!(
             release_id_from_update_url(&format!("{update_url}/")).unwrap(),
@@ -3132,22 +3154,25 @@ mod tests {
 
     #[test]
     fn rejects_untrusted_release_urls_and_unstable_versions() {
+        let repo = hbb_common::simpledesk::UPDATE_REPO;
         for update_url in [
-            "http://github.com/rustdesk/rustdesk/releases/tag/v1.4.6",
-            "https://github.com:8443/rustdesk/rustdesk/releases/tag/v1.4.6",
-            "https://github.com:443/rustdesk/rustdesk/releases/tag/v1.4.6",
-            "https://user@github.com/rustdesk/rustdesk/releases/tag/v1.4.6",
-            "https://example.com/rustdesk/rustdesk/releases/tag/v1.4.6",
-            "https://github.com/other/rustdesk/releases/tag/v1.4.6",
-            "https://github.com/rustdesk/other/releases/tag/v1.4.6",
-            "https://github.com/rustdesk/rustdesk/releases/download/v1.4.6/rustdesk.exe",
-            "https://github.com/rustdesk/rustdesk/releases/tag/v1.4.6?x=1",
-            "https://github.com/rustdesk/rustdesk/releases/tag/v1.4.6#asset",
-            "https://github.com/rustdesk/rustdesk/releases/tag/v1.4.6/extra",
-            "https://github.com/rustdesk/rustdesk/releases/tag/v1%2F4%2F6",
-            "https://github.com/rustdesk/rustdesk/releases/tag/%2e%2e",
+            // SimpleDesk: releases of the original RustDesk are not ours.
+            "https://github.com/rustdesk/rustdesk/releases/tag/v1.4.6".to_owned(),
+            format!("http://github.com/{repo}/releases/tag/v1.4.6"),
+            format!("https://github.com:8443/{repo}/releases/tag/v1.4.6"),
+            format!("https://github.com:443/{repo}/releases/tag/v1.4.6"),
+            format!("https://user@github.com/{repo}/releases/tag/v1.4.6"),
+            format!("https://example.com/{repo}/releases/tag/v1.4.6"),
+            "https://github.com/other/simpledesk/releases/tag/v1.4.6".to_owned(),
+            "https://github.com/felixthedevgit/other/releases/tag/v1.4.6".to_owned(),
+            format!("https://github.com/{repo}/releases/download/v1.4.6/simpledesk.exe"),
+            format!("https://github.com/{repo}/releases/tag/v1.4.6?x=1"),
+            format!("https://github.com/{repo}/releases/tag/v1.4.6#asset"),
+            format!("https://github.com/{repo}/releases/tag/v1.4.6/extra"),
+            format!("https://github.com/{repo}/releases/tag/v1%2F4%2F6"),
+            format!("https://github.com/{repo}/releases/tag/%2e%2e"),
         ] {
-            assert!(release_id_from_update_url(update_url).is_err());
+            assert!(release_id_from_update_url(&update_url).is_err(), "{update_url}");
         }
         for release_id in ["v1.4.6-rc1", "nightly", "v9223372036854775807.1.1"] {
             assert!(display_version_from_release_id(release_id).is_err());
