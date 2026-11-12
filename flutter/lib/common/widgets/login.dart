@@ -719,14 +719,9 @@ Future<bool?> _openLoginDialogOnce() async {
   }
 }
 
+// SimpleDesk: there is no login with user name and password. All accounts live in the
+// provider (Eider), so the dialog only offers the provider's button.
 Future<bool?> _openLoginDialog() async {
-  var username =
-      TextEditingController(text: UserModel.getLocalUserInfo()?['name'] ?? '');
-  var password = TextEditingController();
-  final userFocusNode = FocusNode()..requestFocus();
-  Timer(Duration(milliseconds: 100), () => userFocusNode..requestFocus());
-
-  String? usernameMsg;
   String? passwordMsg;
   var isInProgress = false;
   final oidcAuth = _OidcAuthController();
@@ -753,18 +748,6 @@ Future<bool?> _openLoginDialog() async {
   Future.delayed(Duration.zero, fetchLoginOptions);
 
   final res = await gFFI.dialogManager.show<bool>((setState, close, context) {
-    username.addListener(() {
-      if (usernameMsg != null) {
-        setState(() => usernameMsg = null);
-      }
-    });
-
-    password.addListener(() {
-      if (passwordMsg != null) {
-        setState(() => passwordMsg = null);
-      }
-    });
-
     onDialogCancel() {
       isInProgress = false;
       close(false);
@@ -823,39 +806,6 @@ Future<bool?> _openLoginDialog() async {
       }
     }
 
-    onLogin() async {
-      if (curOP.value.isNotEmpty || isInProgress) {
-        return;
-      }
-      // validate
-      if (username.text.isEmpty) {
-        setState(() => usernameMsg = translate('Username missed'));
-        return;
-      }
-      if (password.text.isEmpty) {
-        setState(() => passwordMsg = translate('Password missed'));
-        return;
-      }
-      curOP.value = 'rustdesk';
-      setState(() => isInProgress = true);
-      try {
-        final resp = await gFFI.userModel.login(LoginRequest(
-            username: username.text,
-            password: password.text,
-            id: await bind.mainGetMyId(),
-            uuid: await bind.mainGetUuid(),
-            autoLogin: true,
-            type: HttpType.kAuthReqTypeAccount));
-        await handleLoginResponse(resp, true, close);
-      } on RequestException catch (err) {
-        passwordMsg = translate(err.cause);
-      } catch (err) {
-        passwordMsg = "Unknown Error: $err";
-      }
-      curOP.value = '';
-      setState(() => isInProgress = false);
-    }
-
     thirdAuthWidget() => Obx(() {
           final error = loginOptionsError.value;
           final inProgress = loginOptionsInProgress.value;
@@ -887,48 +837,37 @@ Future<bool?> _openLoginDialog() async {
               ],
             );
           }
-          return Offstage(
-            offstage: loginOptions.isEmpty,
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 8.0,
-                ),
-                Center(
-                    child: Text(
-                  translate('or'),
-                  style: TextStyle(fontSize: 16),
-                )),
-                const SizedBox(
-                  height: 8.0,
-                ),
-                LoginWidgetOP(
-                  ops: loginOptions
-                      .map((e) => ConfigOP(op: e['name'], icon: e['icon']))
-                      .toList(),
-                  curOP: curOP,
-                  startAuth: oidcAuth.start,
-                  cancelAuth: oidcAuth.cancelCurrent,
-                  canStartAuth: oidcAuth.canStart,
-                  cbLogin: (Map<String, dynamic> authBody) async {
-                    LoginResponse? resp;
-                    try {
-                      // access_token is already stored in the rust side.
-                      resp =
-                          gFFI.userModel.getLoginResponseFromAuthBody(authBody);
-                    } catch (e) {
-                      debugPrint(
-                          'Failed to parse oidc login body: "$authBody"');
-                    }
-                    close(true);
+          if (inProgress) {
+            return const LinearProgressIndicator();
+          }
+          if (loginOptions.isEmpty) {
+            return const Text(
+              'Die Anmeldung ist auf diesem Server noch nicht eingerichtet. Bitte sag der IT Bescheid.',
+              textAlign: TextAlign.center,
+            );
+          }
+          return LoginWidgetOP(
+            ops: loginOptions
+                .map((e) => ConfigOP(op: e['name'], icon: e['icon']))
+                .toList(),
+            curOP: curOP,
+            startAuth: oidcAuth.start,
+            cancelAuth: oidcAuth.cancelCurrent,
+            canStartAuth: oidcAuth.canStart,
+            cbLogin: (Map<String, dynamic> authBody) async {
+              LoginResponse? resp;
+              try {
+                // access_token is already stored in the rust side.
+                resp = gFFI.userModel.getLoginResponseFromAuthBody(authBody);
+              } catch (e) {
+                debugPrint('Failed to parse oidc login body: "$authBody"');
+              }
+              close(true);
 
-                    if (resp != null) {
-                      handleLoginResponse(resp, false, null);
-                    }
-                  },
-                ),
-              ],
-            ),
+              if (resp != null) {
+                handleLoginResponse(resp, false, null);
+              }
+            },
           );
         });
 
@@ -975,25 +914,10 @@ Future<bool?> _openLoginDialog() async {
           const SizedBox(
             height: 8.0,
           ),
-          // SimpleDesk: when the server offers a login through a provider (Eider), that is
-          // the only way in; user name and password only show on a server without one.
-          Obx(() => loginOptions.isNotEmpty || loginOptionsInProgress.value
-              ? const SizedBox.shrink()
-              : LoginWidgetUserPass(
-                  username: username,
-                  pass: password,
-                  usernameMsg: usernameMsg,
-                  passMsg: passwordMsg,
-                  isInProgress: isInProgress,
-                  curOP: curOP,
-                  onLogin: onLogin,
-                  userFocusNode: userFocusNode,
-                )),
           thirdAuthWidget(),
         ],
       ),
       onCancel: onDialogCancel,
-      onSubmit: onLogin,
     );
   }).whenComplete(oidcAuth.close);
 
