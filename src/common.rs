@@ -2893,6 +2893,12 @@ pub async fn test_ipv6() -> Option<tokio::task::JoinHandle<()>> {
             .into_iter()
             .map(|stun| stun_ipv6_test(stun).boxed())
             .collect::<Vec<_>>();
+        // SimpleDesk ships without public STUN servers, and select_ok panics on an empty list,
+        // which aborts the whole client in a release build.
+        if tests.is_empty() {
+            log::debug!("No STUN server configured, skipping the IPv6 STUN probe");
+            return;
+        }
 
         match hbb_common::timeout(STUN_IPV6_TIMEOUT_MS, select_ok(tests)).await {
             Ok(Ok(res)) => {
@@ -3438,6 +3444,14 @@ mod tests {
         hbb_common::socket_client::connect_tcp(host.to_owned(), 3000)
             .await
             .unwrap()
+    }
+
+    #[tokio::test]
+    async fn test_ipv6_survives_an_empty_stun_list() {
+        assert!(hbb_common::webrtc::WebRTCStream::default_stun_servers().is_empty());
+        if let Some(job) = test_ipv6().await {
+            assert!(job.await.is_ok(), "the IPv6 probe panicked");
+        }
     }
 
     #[tokio::test]
