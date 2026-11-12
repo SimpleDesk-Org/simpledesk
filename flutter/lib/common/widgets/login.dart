@@ -975,16 +975,20 @@ Future<bool?> _openLoginDialog() async {
           const SizedBox(
             height: 8.0,
           ),
-          LoginWidgetUserPass(
-            username: username,
-            pass: password,
-            usernameMsg: usernameMsg,
-            passMsg: passwordMsg,
-            isInProgress: isInProgress,
-            curOP: curOP,
-            onLogin: onLogin,
-            userFocusNode: userFocusNode,
-          ),
+          // SimpleDesk: when the server offers a login through a provider (Eider), that is
+          // the only way in; user name and password only show on a server without one.
+          Obx(() => loginOptions.isNotEmpty || loginOptionsInProgress.value
+              ? const SizedBox.shrink()
+              : LoginWidgetUserPass(
+                  username: username,
+                  pass: password,
+                  usernameMsg: usernameMsg,
+                  passMsg: passwordMsg,
+                  isInProgress: isInProgress,
+                  curOP: curOP,
+                  onLogin: onLogin,
+                  userFocusNode: userFocusNode,
+                )),
           thirdAuthWidget(),
         ],
       ),

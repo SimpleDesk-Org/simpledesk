@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/common/widgets/animated_rotation_widget.dart';
 import 'package:flutter_hbb/common/widgets/custom_password.dart';
+import 'package:flutter_hbb/common/widgets/login.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
@@ -65,9 +66,45 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       children: [
         buildLeftPane(context),
         if (!isIncomingOnly) const VerticalDivider(width: 1),
-        if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
+        // SimpleDesk: connecting to other devices needs a login (account and Lizenz at
+        // Eider). Being helped, with ID and password on the left, works without one.
+        if (!isIncomingOnly)
+          Expanded(
+              child: Obx(() => gFFI.userModel.isLogin
+                  ? buildRightPane(context)
+                  : buildLoginGate(context))),
       ],
     ));
+  }
+
+  Widget buildLoginGate(BuildContext context) {
+    final hint = Theme.of(context).hintColor;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_outline, size: 48, color: hint),
+            const SizedBox(height: 16),
+            Text('Bei SimpleDesk anmelden',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(
+              'Um dich mit anderen Geräten zu verbinden, melde dich mit deinem Eider-Konto an. Konto und Lizenz bekommst du von der IT.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: hint),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.login),
+              label: const Text('Anmelden'),
+              onPressed: () => loginDialog(),
+            ),
+          ],
+        ),
+      ).marginSymmetric(horizontal: 24),
+    );
   }
 
   Widget _buildBlock({required Widget child}) {
