@@ -15,6 +15,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../common.dart';
 import '../../models/peer_model.dart';
+import '../../models/peer_status_model.dart';
 import '../../models/platform_model.dart';
 import 'peer_card.dart';
 
@@ -334,6 +335,8 @@ class _PeersViewState extends State<_PeersView>
             if (now.difference(_lastQueryTime) >= _queryInterval) {
               if (_curPeers.isNotEmpty) {
                 bind.queryOnlines(ids: _curPeers.toList(growable: false));
+                // SimpleDesk: AFK and "seit" from the API server.
+                PeerStatusModel.query(_curPeers);
                 _lastQueryTime = DateTime.now();
                 _queryCount += 1;
               }
@@ -348,6 +351,7 @@ class _PeersViewState extends State<_PeersView>
   _queryOnlines(bool isLoadEvent) {
     if (_curPeers.isNotEmpty) {
       bind.queryOnlines(ids: _curPeers.toList(growable: false));
+      PeerStatusModel.query(_curPeers);
       _queryCount = 0;
     }
     _lastQueryPeers = {..._curPeers};

@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../../common.dart';
 import '../../common/formatter/id_formatter.dart';
 import '../../models/peer_model.dart';
+import '../../models/peer_status_model.dart';
 import '../../models/platform_model.dart';
 import '../../desktop/widgets/material_mod_popup_menu.dart' as mod_menu;
 import '../../desktop/widgets/popup_menu.dart';
@@ -186,7 +187,8 @@ class _PeerCardState extends State<_PeerCard>
                   child: Column(
                     children: [
                       Row(children: [
-                        getOnline(isPortrait ? 4 : 8, peer.online),
+                        getOnline(isPortrait ? 4 : 8, peer.online,
+                            id: peer.id),
                         Expanded(
                             child: Text(
                           peer.alias.isEmpty ? formatID(peer.id) : peer.alias,
@@ -368,7 +370,7 @@ class _PeerCardState extends State<_PeerCard>
                     children: [
                       Expanded(
                           child: Row(children: [
-                        getOnline(8, peer.online),
+                        getOnline(8, peer.online, id: peer.id),
                         Expanded(
                             child: Text(
                           peer.alias.isEmpty ? formatID(peer.id) : peer.alias,
@@ -1476,14 +1478,38 @@ void _rdpDialog(String id) async {
   });
 }
 
-Widget getOnline(double rightPadding, bool online) {
-  return Tooltip(
-      message: translate(online ? 'Online' : 'Offline'),
+/// SimpleDesk: green "Online", yellow "AFK · seit 12 min" or grey "Offline". Online or not
+/// comes from the rendezvous server ([online]); AFK and "seit" come from the API server
+/// for [id] (see PeerStatusModel), when it told them lately.
+Widget getOnline(double rightPadding, bool online, {String? id}) {
+  Widget dot(Color color, String message) => Tooltip(
+      message: message,
       waitDuration: const Duration(seconds: 1),
       child: Padding(
           padding: EdgeInsets.fromLTRB(0, 4, rightPadding, 4),
-          child: CircleAvatar(
-              radius: 3, backgroundColor: online ? Colors.green : kColorWarn)));
+          child: CircleAvatar(radius: 3, backgroundColor: color)));
+  Widget plain() => online
+      ? dot(Colors.green, translate('Online'))
+      : dot(Colors.grey, translate('Offline'));
+  if (id == null) {
+    return plain();
+  }
+  return Obx(() {
+    // Drawn again when new states arrive.
+    PeerStatusModel.revision.value;
+    final status = PeerStatusModel.of(id);
+    if (status == null) {
+      return plain();
+    }
+    final since = PeerStatusModel.sinceText(status.since);
+    if (online && status.state == 'afk') {
+      return dot(Colors.amber, since.isEmpty ? 'AFK' : 'AFK · $since');
+    }
+    if (!online && status.state == 'offline' && since.isNotEmpty) {
+      return dot(Colors.grey, '${translate('Offline')} · $since');
+    }
+    return plain();
+  });
 }
 
 Widget build_more(BuildContext context,
