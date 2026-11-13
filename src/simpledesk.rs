@@ -1,8 +1,9 @@
-//! SimpleDesk: the client is set up once for one server, from its domain or IP address.
+//! SimpleDesk: the client is set up once for one server, from its domain or IP address, and
+//! takes the ID an admin assigns it in the web panel.
 
 use base::config::keys;
 use hbb_common::{
-    config::{self, LocalConfig, PeerConfig},
+    config::{self, Config, LocalConfig, PeerConfig},
     log,
 };
 use std::{io::Read, time::Duration};
@@ -11,6 +12,8 @@ use std::{io::Read, time::Duration};
 const SERVER_INFO_PATH: &str = "/api/simpledesk/server-info";
 const SERVER_INFO_TIMEOUT: Duration = Duration::from_secs(10);
 const SERVER_INFO_MAX_LEN: u64 = 64 * 1024;
+/// "Y" once the server says an admin assigned this device its ID, see [`on_heartbeat`].
+const ID_ASSIGNED_OPTION: &str = "simpledesk-id-assigned";
 
 /// Why a server could not be set up. The setup screen shows a text for each code.
 #[derive(Debug, PartialEq)]
@@ -48,7 +51,7 @@ pub fn set_up_server(address: &str) -> Result<(), SetupError> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let mut options = crate::ipc::get_options();
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    let mut options = hbb_common::config::Config::get_options();
+    let mut options = Config::get_options();
     for (k, v) in [
         (keys::OPTION_CUSTOM_RENDEZVOUS_SERVER, host.clone()),
         (keys::OPTION_RELAY_SERVER, host.clone()),
@@ -67,6 +70,59 @@ pub fn set_up_server(address: &str) -> Result<(), SetupError> {
     Ok(())
 }
 
+/// Whether an admin has assigned this device its ID. Until then the home page shows no ID.
+pub fn is_id_assigned() -> bool {
+    crate::ui_interface::get_option(ID_ASSIGNED_OPTION) == "Y"
+}
+
+/// Handles `"simpledesk": {"id_assigned", "assigned_id"}` from the heartbeat answer. An ID the
+/// device does not have yet it takes over like a normal ID change (RegisterPk with the old ID),
+/// which hbbs accepts only after an admin approved that ID in the web panel.
+pub async fn on_heartbeat(info: serde_json::Value) {
+    // A server without the field hands out no IDs, so the device keeps its own.
+    let assigned = info
+        .get("id_assigned")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+    Config::set_option(
+        ID_ASSIGNED_OPTION.to_owned(),
+        if assigned { "Y" } else { "" }.to_owned(),
+    );
+    let assigned_id = info
+        .get("assigned_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .trim()
+        .to_owned();
+    let old_id = Config::get_id();
+    if assigned_id.is_empty() || assigned_id == old_id {
+        return;
+    }
+    let uuid = hbb_common::bytes::Bytes::from(hbb_common::get_uuid());
+    let mut err = "";
+    for server in Config::get_rendezvous_servers() {
+        let res =
+            crate::ui_interface::check_id(server, old_id.clone(), assigned_id.clone(), uuid.clone())
+                .await;
+        if !res.is_empty() {
+            err = res;
+        }
+    }
+    if err.is_empty() {
+        Config::set_key_confirmed(false);
+        Config::set_id(&assigned_id);
+        log::info!("ID changed from {old_id} to {assigned_id}, as assigned by an admin");
+    } else {
+        hbb_common::throttled_log!(
+            Duration::from_secs(300),
+            warn,
+            "Switching to the assigned ID {} failed: {}",
+            assigned_id,
+            err
+        );
+    }
+}
+
 /// Clears what ties the client to its server, so it can be set up for another one: the server
 /// settings with key and proxy, the login, the cached address books and devices, and the
 /// permanent password. The device ID stays, so the IT still finds the device.
@@ -74,12 +130,13 @@ pub fn reset_client() {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let mut options = crate::ipc::get_options();
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    let mut options = config::Config::get_options();
+    let mut options = Config::get_options();
     for k in [
         keys::OPTION_CUSTOM_RENDEZVOUS_SERVER,
         keys::OPTION_RELAY_SERVER,
         keys::OPTION_API_SERVER,
         keys::OPTION_KEY,
+        ID_ASSIGNED_OPTION,
     ] {
         options.remove(k);
     }

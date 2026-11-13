@@ -1610,7 +1610,7 @@ pub async fn change_id_shared_(id: String, old_id: String) -> &'static str {
     err
 }
 
-async fn check_id(
+pub(crate) async fn check_id(
     rendezvous_server: String,
     old_id: String,
     id: String,

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../../common.dart';
 import '../../common/widgets/dialog.dart';
+import '../../common/widgets/simpledesk_id.dart';
 import '../../consts.dart';
 import '../../models/platform_model.dart';
 import '../../models/server_model.dart';
@@ -62,13 +63,14 @@ class _DropDownAction extends StatelessWidget {
           final isAllowNumericOneTimePassword =
               gFFI.serverModel.allowNumericOneTimePassword;
           return [
-            if (!isChangeIdDisabled())
+            // SimpleDesk: only an admin may change the ID, and the server checks it.
+            if (!isChangeIdDisabled() && canChangeId)
               PopupMenuItem(
                 enabled: gFFI.serverModel.connectStatus > 0,
                 value: "changeID",
                 child: Text(translate("Change ID")),
               ),
-            if (!isChangeIdDisabled()) const PopupMenuDivider(),
+            if (!isChangeIdDisabled() && canChangeId) const PopupMenuDivider(),
             PopupMenuItem(
               value: 'AcceptSessionsViaPassword',
               child: listTile(
@@ -134,7 +136,7 @@ class _DropDownAction extends StatelessWidget {
         },
         onSelected: (value) async {
           if (value == "changeID") {
-            changeIdDialog();
+            adminChangeIdDialog();
           } else if (value == "setPermanentPassword") {
             setPasswordDialog();
           } else if (value == "setTemporaryPasswordLength") {

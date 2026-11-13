@@ -267,6 +267,10 @@ async fn start_hbbs_sync_async() {
                                 log::info!("strategy updated");
                             }
                         }
+                        // SimpleDesk: the ID an admin assigned this device.
+                        if let Some(info) = rsp.remove("simpledesk") {
+                            crate::simpledesk::on_heartbeat(info).await;
+                        }
                         if let Some(rsp_modified_at) = rsp.remove("modified_at") {
                             if let Ok(rsp_modified_at) = serde_json::from_value::<i64>(rsp_modified_at) {
                                 if rsp_modified_at != modified_at {

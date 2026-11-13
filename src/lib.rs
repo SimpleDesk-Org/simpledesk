@@ -69,7 +69,11 @@ mod ui_session_interface;
 
 mod hbbs_http;
 
-#[cfg(any(target_os = "android", target_os = "ios", feature = "flutter", test))]
+// The heartbeat (all builds) uses part of it, the setup screen (Flutter) the rest.
+#[cfg_attr(
+    not(any(target_os = "android", target_os = "ios", feature = "flutter")),
+    allow(dead_code)
+)]
 mod simpledesk;
 
 #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]

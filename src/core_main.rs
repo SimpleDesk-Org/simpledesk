@@ -465,6 +465,11 @@ pub fn core_main() -> Option<CoreMainAction> {
             println!("{}", crate::ipc::get_id());
             return None;
         } else if args[0] == "--set-id" {
+            // SimpleDesk: an admin assigns the ID in the web panel and the device takes it over
+            // (see simpledesk::on_heartbeat), so the branch below is not reached.
+            println!("Die ID vergibt ein Admin im Web-Panel.");
+            return None;
+        } else if args[0] == "--set-id" {
             if is_cli_setting_change_disabled() {
                 println!("Settings are disabled!");
                 return None;

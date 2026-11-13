@@ -955,6 +955,10 @@ class RustdeskImpl {
     return Future.value();
   }
 
+  bool mainIsIdAssigned({dynamic hint}) {
+    return true;
+  }
+
   Future<void> mainPostRequest(
       {required String url,
       required String body,

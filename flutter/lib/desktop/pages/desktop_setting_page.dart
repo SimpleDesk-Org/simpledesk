@@ -28,6 +28,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
 import '../../common/widgets/server_setup.dart';
+import '../../common/widgets/simpledesk_id.dart';
 import '../widgets/tabbar_widget.dart' show DesktopTabController;
 
 const double _kTabWidth = 200;
@@ -1077,6 +1078,13 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               child: Column(children: [
                 simpleDeskPassword(context),
                 _Card(title: '2FA', children: [tfa()]),
+                // SimpleDesk: only an admin may change the ID, and the server checks it.
+                Obx(() => canChangeId
+                    ? _Card(title: 'ID', children: [
+                        _Button('ID ändern', adminChangeIdDialog,
+                            enabled: !locked),
+                      ])
+                    : const Offstage()),
               ]),
             ),
           ],

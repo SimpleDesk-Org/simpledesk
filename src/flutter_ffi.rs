@@ -1230,6 +1230,11 @@ pub fn main_set_up_server(address: String) -> String {
     }
 }
 
+/// SimpleDesk: whether an admin assigned this device its ID; until then the UI shows none.
+pub fn main_is_id_assigned() -> SyncReturn<bool> {
+    SyncReturn(crate::simpledesk::is_id_assigned())
+}
+
 /// SimpleDesk: "Client zurücksetzen", see `simpledesk::reset_client`.
 pub fn main_reset_client() {
     crate::simpledesk::reset_client();
