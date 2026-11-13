@@ -33,7 +33,7 @@ fn make_tray() -> hbb_common::ResultType<()> {
     };
 
     // Duplicated tray icons kept piling up through the blind spots of
-    // `check_process("--tray", ..)`. https://github.com/rustdesk/rustdesk/issues/15689
+    // `check_process("--tray", ..)`. RustDesk issue #15689
     #[cfg(windows)]
     if !crate::platform::windows::try_lock_tray_single_instance() {
         log::info!("Another tray process is already running in this session, exit");
@@ -146,7 +146,7 @@ fn make_tray() -> hbb_common::ResultType<()> {
         );
 
         if let tao::event::Event::NewEvents(tao::event::StartCause::Init) = event {
-            // for fixing https://github.com/rustdesk/rustdesk/discussions/10210#discussioncomment-14600745
+            // for fixing RustDesk discussion #10210
             // so we start tray, but not to show it
             if crate::ui_interface::get_builtin_option(keys::OPTION_HIDE_TRAY) == "Y" {
                 return;

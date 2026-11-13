@@ -2,7 +2,7 @@ use base::platform::windows::is_windows_version_or_greater;
 use hbb_common::{bail, ResultType};
 
 // This string is defined here.
-//  https://github.com/rustdesk-org/RustDeskIddDriver/blob/b370aad3f50028b039aad211df60c8051c4a64d6/RustDeskIddDriver/RustDeskIddDriver.inf#LL73C1-L73C40
+//  RustDeskIddDriver RustDeskIddDriver/RustDeskIddDriver.inf
 pub const RUSTDESK_IDD_DEVICE_STRING: &'static str = "RustDeskIddDriver Device\0";
 pub const AMYUNI_IDD_DEVICE_STRING: &'static str = "USB Mobile Monitor Virtual Display\0";
 

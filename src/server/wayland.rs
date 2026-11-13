@@ -440,7 +440,7 @@ pub(super) async fn check_init() -> ResultType<()> {
         if empty {
             if crate::input_service::wayland_use_uinput() {
                 // The cached layout may predate compositor changes made while no session
-                // was active, https://github.com/rustdesk/rustdesk/issues/15601
+                // was active, RustDesk issue #15601
                 // Read before the rect: an apply that races a layout move is recorded under the
                 // older generation, which only streams built before the move measure under.
                 #[cfg(feature = "drm")]

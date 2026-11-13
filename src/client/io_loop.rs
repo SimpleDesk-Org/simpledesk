@@ -1813,7 +1813,7 @@ impl<T: InvokeUiSession> Remote<T> {
                                 self.start_initial_clipboard_sync();
                             }
                             // to-do: Android, is `sync_init_clipboard` really needed?
-                            // https://github.com/rustdesk/rustdesk/discussions/9010
+                            // RustDesk discussion #9010
                         }
 
                         if self.handler.is_file_transfer() {
@@ -2274,7 +2274,7 @@ impl<T: InvokeUiSession> Remote<T> {
                     }
                     Some(misc::Union::PermissionInfo(p)) => {
                         log::info!("Change permission {:?} -> {}", p.permission, p.enabled);
-                        // https://github.com/rustdesk/rustdesk/issues/3703#issuecomment-1474734754
+                        // RustDesk issue #3703
                         match p.permission.enum_value() {
                             Ok(Permission::Keyboard) => {
                                 *self.handler.server_keyboard_enabled.write().unwrap() = p.enabled;

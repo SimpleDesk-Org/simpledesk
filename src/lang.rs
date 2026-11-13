@@ -275,7 +275,7 @@ pub fn translate_locale(name: String, locale: &str) -> String {
                 if !app_name.contains("RustDesk") {
                     s = s.replace("RustDesk", &app_name);
                 } else {
-                    // https://github.com/rustdesk/rustdesk-server-pro/issues/845
+                    // RustDesk Server Pro issue #845
                     // If app_name contains "RustDesk" (e.g., "RustDesk-Admin"), we need to avoid
                     // replacing "RustDesk" within the already-substituted app_name, which would
                     // cause duplication like "RustDesk-Admin" -> "RustDesk-Admin-Admin".

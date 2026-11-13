@@ -1,7 +1,7 @@
 [package]
 name = "rustdesk"
 version = "1.5.3"
-authors = ["rustdesk <info@rustdesk.com>"]
+authors = ["rustdesk"]
 edition = "2021"
 build= "build.rs"
 description = "SimpleDesk Remote Desktop (based on RustDesk)"
@@ -91,7 +91,7 @@ kcp-sys= { git = "https://github.com/rustdesk-org/kcp-sys", branch = "rustdesk-p
 reqwest = { version = "0.12", features = ["blocking", "socks", "json", "native-tls", "rustls-tls", "rustls-tls-native-roots", "gzip", "zstd"], default-features=false }
 
 [target.'cfg(not(target_os = "linux"))'.dependencies]
-# https://github.com/rustdesk/rustdesk/discussions/10197, not use cpal on linux
+# RustDesk discussion #10197, not use cpal on linux
 cpal = { git = "https://github.com/rustdesk-org/cpal", branch = "osx-screencapturekit" }
 ringbuf = "0.3"
 

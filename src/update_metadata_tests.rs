@@ -16,7 +16,7 @@ struct Fixture {
 }
 
 fn artifact() -> Value {
-    json!({"platform":"windows","arch":"x86_64","format":"exe","url":"https://github.com/rustdesk/rustdesk/releases/download/v1.4.6/rustdesk-1.4.6-x86_64.exe","file_name":"rustdesk-1.4.6-x86_64.exe","size":123456,"sha256":SHA256})
+    json!({"platform":"windows","arch":"x86_64","format":"exe","url":"https://github.com/SimpleDesk-Org/simpledesk/releases/download/v1.4.6/rustdesk-1.4.6-x86_64.exe","file_name":"rustdesk-1.4.6-x86_64.exe","size":123456,"sha256":SHA256})
 }
 
 fn metadata() -> Value {
@@ -86,7 +86,7 @@ fn verify_with_query(
             requirements: requirements(*query),
             expected_package_id: PUBLIC_UPDATE_PACKAGE_ID,
             artifact_url_policy: ArtifactUrlPolicy::ExactPrefix(
-                "https://github.com/rustdesk/rustdesk/releases/download/v1.4.6/",
+                "https://github.com/SimpleDesk-Org/simpledesk/releases/download/v1.4.6/",
             ),
             trusted_keys: &trusted_keys,
         },
@@ -135,8 +135,8 @@ fn rejects_schema_policy_artifact_and_url_mismatches() {
         ("package_id", json!("custom"), false), ("signature_key_id", json!("different-key"), false),
         ("arch", json!("x86"), true),
         ("sha256", json!("not-a-sha256"), true),
-        ("url", json!("https://github.com/rustdesk/rustdesk/releases/download/v1.4.7/rustdesk-1.4.6-x86_64.exe"), true),
-        ("url", json!("https://github.com/rustdesk/rustdesk/releases/download/v1.4.6/other.exe"), true),
+        ("url", json!("https://github.com/SimpleDesk-Org/simpledesk/releases/download/v1.4.7/rustdesk-1.4.6-x86_64.exe"), true),
+        ("url", json!("https://github.com/SimpleDesk-Org/simpledesk/releases/download/v1.4.6/other.exe"), true),
     ];
     for (key, value, artifact_field) in cases {
         let mut metadata = metadata();
@@ -160,7 +160,7 @@ fn rejects_artifact_file_name_path_components() {
         let mut invalid_metadata = metadata();
         invalid_metadata["artifacts"][0]["file_name"] = json!(file_name);
         invalid_metadata["artifacts"][0]["url"] = json!(format!(
-            "https://github.com/rustdesk/rustdesk/releases/download/v1.4.6/{file_name}"
+            "https://github.com/SimpleDesk-Org/simpledesk/releases/download/v1.4.6/{file_name}"
         ));
         let fixture = sign_fixture(invalid_metadata, KEY_ID);
 

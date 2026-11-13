@@ -465,7 +465,7 @@ pub fn get_display_rects_for_uinput() -> Vec<DisplayRect> {
 ///
 /// Returns the input unchanged when the point is outside every baseline display or the
 /// matched display is gone, so a failed match never moves the cursor further off than
-/// leaving it alone. https://github.com/rustdesk/rustdesk/issues/15601
+/// leaving it alone. RustDesk issue #15601
 pub fn remap_to_live_layout(
     x: i32,
     y: i32,

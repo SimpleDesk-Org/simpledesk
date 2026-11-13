@@ -1082,7 +1082,7 @@ impl<T: InvokeUiSession> Session<T> {
         let platform_code: u32 = position_code as _;
         // For translate mode.
         // We need to set the platform code (keysym) if is AltGr.
-        // https://github.com/rustdesk/rustdesk/blob/07cf1b4db5ef2f925efd3b16b87c33ce03c94809/src/keyboard.rs#L1029
+        // RustDesk src/keyboard.rs
         // https://github.com/flutter/flutter/issues/153811
         #[cfg(target_os = "linux")]
         let platform_code: u32 = position_code as _;

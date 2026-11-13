@@ -30,7 +30,7 @@ namespace {
 // until a real resize re-enters OnWindowSizeChanged, which resets the resize
 // target and resends the window metrics. That is why minimize/restore heals
 // it; ForceChildRefresh() below does the same programmatically.
-// https://github.com/rustdesk/rustdesk/issues/6756
+// RustDesk issue #6756
 // https://github.com/flutter/flutter/issues/159630
 //
 // The timer below drives that recovery. Two subtleties, verified against the

@@ -636,7 +636,7 @@ const MOUSE_ACTIVE_DISTANCE: i32 = 5;
 
 static RECORD_CURSOR_POS_RUNNING: AtomicBool = AtomicBool::new(false);
 
-// https://github.com/rustdesk/rustdesk/issues/9729
+// RustDesk issue #9729
 // We need to do some special handling for macOS when using the legacy mode.
 #[cfg(target_os = "macos")]
 static LAST_KEY_LEGACY_MODE: AtomicBool = AtomicBool::new(true);
@@ -717,7 +717,7 @@ impl VirtualInputState {
             CGEventSourceStateID::CombinedSessionState,
             // Note: `CGEventTapLocation::Session` will be affected by the mouse events.
             // When we're simulating key events, then move the physical mouse, the key events will be affected.
-            // It looks like https://github.com/rustdesk/rustdesk/issues/9729#issuecomment-2432306822
+            // It looks like RustDesk issue #9729
             // 1. Press "Command" key in RustDesk
             // 2. Move the physical mouse
             // 3. Press "V" key in RustDesk
@@ -874,7 +874,7 @@ fn key_sleep() {
 
 #[inline]
 fn get_modifier_state(key: Key, en: &mut Enigo) -> bool {
-    // https://github.com/rustdesk/rustdesk/issues/332
+    // RustDesk issue #332
     // on Linux, if RightAlt is down, RightAlt status is false, Alt status is true
     // but on Windows, both are true
     let x = en.get_key_state(key.clone());
@@ -1320,7 +1320,7 @@ pub fn handle_mouse_simulation_(evt: &MouseEvent, conn: i32) {
             set_relative_mouse_active(conn, false);
             // On Wayland with uinput, the client sends coordinates in the layout it was
             // told at session init. If the compositor has since moved a monitor, correct
-            // them onto the current layout. https://github.com/rustdesk/rustdesk/issues/15601
+            // them onto the current layout. RustDesk issue #15601
             #[cfg(target_os = "linux")]
             let uinput = wayland_use_uinput();
             #[cfg(target_os = "linux")]
@@ -2418,9 +2418,9 @@ fn skip_led_sync_control_key(_key: &ControlKey) -> bool {
 
 // LockModesHandler should not be created when single meta is pressing and releasing.
 // Because the drop function may insert "CapsLock Click" and "NumLock Click", which breaks single meta click.
-// https://github.com/rustdesk/rustdesk/issues/3928#issuecomment-1496936687
-// https://github.com/rustdesk/rustdesk/issues/3928#issuecomment-1500415822
-// https://github.com/rustdesk/rustdesk/issues/3928#issuecomment-1500773473
+// RustDesk issue #3928
+// RustDesk issue #3928
+// RustDesk issue #3928
 #[cfg(any(target_os = "windows", target_os = "linux"))]
 fn skip_led_sync_control_key(key: &ControlKey) -> bool {
     matches!(

@@ -172,7 +172,7 @@ impl PipeWireCapturable {
         stream: &PwStreamInfo,
     ) -> Self {
         // alternative to get screen resolution as stream.size is not always correct ex: on fractional scaling
-        // https://github.com/rustdesk/rustdesk/issues/6116#issuecomment-1817724244
+        // RustDesk issue #6116
         let measured = get_res(Self {
             dbus_conn: conn.clone(),
             fd: fd.clone(),

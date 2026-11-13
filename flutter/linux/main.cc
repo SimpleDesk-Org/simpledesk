@@ -14,7 +14,7 @@ void print_help_install_pkg(const char* so);
 // The bundle keeps the core library at lib/librustdesk.so next to the
 // executable. Resolve that path explicitly instead of relying on the
 // runner's RPATH, which repackaged installs may strip.
-// https://github.com/rustdesk/rustdesk/discussions/14407
+// RustDesk discussion #14407
 static void* dlopen_bundled_lib() {
   char exe_path[PATH_MAX];
   ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);

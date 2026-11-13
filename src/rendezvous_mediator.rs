@@ -385,7 +385,7 @@ impl RendezvousMediator {
                     wait_for_retry(((timeout - elapsed) / 1000) as _, restarted).await;
                 }
             } else {
-                // https://github.com/rustdesk/rustdesk/issues/12233
+                // RustDesk issue #12233
                 sleep(0.033).await;
             }
         }

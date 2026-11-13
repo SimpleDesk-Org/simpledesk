@@ -3168,7 +3168,7 @@ mod tests {
             format!("https://user@github.com/{repo}/releases/tag/v1.4.6"),
             format!("https://example.com/{repo}/releases/tag/v1.4.6"),
             "https://github.com/other/simpledesk/releases/tag/v1.4.6".to_owned(),
-            "https://github.com/felixthedevgit/other/releases/tag/v1.4.6".to_owned(),
+            "https://github.com/SimpleDesk-Org/other/releases/tag/v1.4.6".to_owned(),
             format!("https://github.com/{repo}/releases/download/v1.4.6/simpledesk.exe"),
             format!("https://github.com/{repo}/releases/tag/v1.4.6?x=1"),
             format!("https://github.com/{repo}/releases/tag/v1.4.6#asset"),

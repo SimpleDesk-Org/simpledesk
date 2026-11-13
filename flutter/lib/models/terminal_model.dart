@@ -102,7 +102,7 @@ class TerminalModel with ChangeNotifier {
     // - Peer Linux: canonical-mode shells accept both, but raw-mode apps
     //   (readline, prompt_toolkit, vim, TUI frameworks) expect '\r'.
     // - Peer macOS: same as Linux, raw-mode apps expect '\r'
-    //   (https://github.com/rustdesk/rustdesk/issues/14907).
+    //   (RustDesk issue #14907).
     // So on mobile / web-mobile, normalize the original lone '\n' to '\r'
     // before modifier mappings. This keeps Ctrl+J mapped to LF instead of
     // having the generated control code rewritten to CR afterward.

@@ -28,7 +28,7 @@ typedef HandleEvent = Future<void> Function(Map<String, dynamic> evt);
 /// The Linux bundle keeps the core library at lib/librustdesk.so next to the
 /// executable. Prefer that copy, mirroring flutter/linux/main.cc: the plain
 /// name relies on the loader search path, which repackaged installs may not
-/// cover. https://github.com/rustdesk/rustdesk/discussions/14407
+/// cover. RustDesk discussion #14407
 DynamicLibrary _openLinuxCoreLib() {
   final bundled =
       '${File(Platform.resolvedExecutable).parent.path}/lib/librustdesk.so';
