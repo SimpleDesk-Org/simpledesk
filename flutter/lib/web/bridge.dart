@@ -951,6 +951,10 @@ class RustdeskImpl {
     return Future.value('invalid');
   }
 
+  Future<void> mainResetClient({dynamic hint}) {
+    return Future.value();
+  }
+
   Future<void> mainPostRequest(
       {required String url,
       required String body,

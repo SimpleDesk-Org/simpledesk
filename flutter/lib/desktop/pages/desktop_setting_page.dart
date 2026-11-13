@@ -27,6 +27,8 @@ import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
+import '../../common/widgets/server_setup.dart';
+import '../widgets/tabbar_widget.dart';
 
 const double _kTabWidth = 200;
 const double _kTabHeight = 42;
@@ -412,6 +414,7 @@ class _GeneralState extends State<_General> {
       children: [
         _Card(title: 'Language', children: [language()]),
         theme(),
+        if (!isWeb) const _ServerCard(),
       ],
     ).marginOnly(bottom: _kListViewBottomMargin);
   }
@@ -989,6 +992,51 @@ class _GeneralState extends State<_General> {
         );
       }(),
     ];
+  }
+}
+
+// SimpleDesk: the server this client is set up for, and "Client zurücksetzen" to set it up
+// for another one. Like the network settings before, it needs admin rights once installed.
+class _ServerCard extends StatefulWidget {
+  const _ServerCard({Key? key}) : super(key: key);
+
+  @override
+  State<_ServerCard> createState() => _ServerCardState();
+}
+
+class _ServerCardState extends State<_ServerCard> {
+  bool locked = bind.mainIsInstalled();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      _lock(locked, 'Entsperren, um den Client zurückzusetzen', () {
+        setState(() => locked = false);
+      }),
+      Obx(() {
+        // Read so the address is shown again after a setup or a reset.
+        serverSetupNeeded.value;
+        final address =
+            bind.mainGetOptionSync(key: 'custom-rendezvous-server');
+        return _Card(title: 'Server', children: [
+          if (address.isNotEmpty)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SelectableText('Eingerichtet für $address'),
+            ).marginOnly(left: _kContentHMargin),
+          _Button('Client zurücksetzen', () {
+            resetClientDialog(onDone: () {
+              if (Get.isRegistered<DesktopTabController>()) {
+                Get.find<DesktopTabController>().jumpTo(0);
+              }
+            });
+          },
+              enabled: !locked,
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red, foregroundColor: Colors.white)),
+        ]);
+      }),
+    ]);
   }
 }
 

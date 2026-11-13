@@ -2,6 +2,7 @@
 // Until then the home page shows only the "Server einrichten" screen.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:get/get.dart';
 
@@ -11,6 +12,59 @@ final serverSetupNeeded = RxBool(!bind.mainIsServerSetUp());
 /// [child], or the setup screen while no server is set up.
 Widget serverSetupGate(Widget child) =>
     Obx(() => serverSetupNeeded.value ? const ServerSetupPage() : child);
+
+/// Asks before "Client zurücksetzen" and says what it clears. [onDone] runs after the reset.
+void resetClientDialog({VoidCallback? onDone}) {
+  gFFI.dialogManager.show((setState, close, context) {
+    submit() async {
+      close();
+      await resetClient();
+      onDone?.call();
+    }
+
+    return CustomAlertDialog(
+      title: const Text('Client zurücksetzen?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('Danach richtest du den Server neu ein. Gelöscht werden:'),
+          SizedBox(height: 8),
+          Text('• die Server-Einstellungen (Adresse, Schlüssel, Proxy)\n'
+              '• deine Anmeldung\n'
+              '• gespeicherte Adressbücher und Geräte\n'
+              '• das permanente Passwort'),
+          SizedBox(height: 8),
+          Text(
+              'Die ID dieses Geräts bleibt gleich, damit die IT es wiederfindet.'),
+        ],
+      ),
+      actions: [
+        dialogButton('Cancel', onPressed: close, isOutline: true),
+        dialogButton('Zurücksetzen',
+            onPressed: submit,
+            buttonStyle: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, foregroundColor: Colors.white)),
+      ],
+      onCancel: close,
+    );
+  });
+}
+
+/// Clears the server settings, the login, the cached address books and devices and the
+/// permanent password, then shows the setup screen again. The device ID stays.
+Future<void> resetClient() async {
+  // Sign out at the old server while its address is still set.
+  if (gFFI.userModel.isLogin) {
+    await gFFI.userModel.logOut();
+  }
+  await bind.mainResetClient();
+  await gFFI.userModel.reset(resetOther: true);
+  bind.mainLoadRecentPeers();
+  bind.mainLoadFavPeers();
+  bind.mainLoadLanPeers();
+  serverSetupNeeded.value = true;
+}
 
 class ServerSetupPage extends StatefulWidget {
   const ServerSetupPage({Key? key}) : super(key: key);

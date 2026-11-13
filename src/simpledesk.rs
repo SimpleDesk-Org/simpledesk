@@ -1,7 +1,10 @@
 //! SimpleDesk: the client is set up once for one server, from its domain or IP address.
 
 use base::config::keys;
-use hbb_common::log;
+use hbb_common::{
+    config::{self, LocalConfig, PeerConfig},
+    log,
+};
 use std::{io::Read, time::Duration};
 
 /// Where a SimpleDesk server answers `{"key", "name", "version"}`, under `https://<address>`.
@@ -57,6 +60,43 @@ pub fn set_up_server(address: &str) -> Result<(), SetupError> {
     crate::common::test_rendezvous_server();
     log::info!("Set up for the SimpleDesk server {host}");
     Ok(())
+}
+
+/// Clears what ties the client to its server, so it can be set up for another one: the server
+/// settings with key and proxy, the login, the cached address books and devices, and the
+/// permanent password. The device ID stays, so the IT still finds the device.
+pub fn reset_client() {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    let mut options = crate::ipc::get_options();
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    let mut options = config::Config::get_options();
+    for k in [
+        keys::OPTION_CUSTOM_RENDEZVOUS_SERVER,
+        keys::OPTION_RELAY_SERVER,
+        keys::OPTION_API_SERVER,
+        keys::OPTION_KEY,
+    ] {
+        options.remove(k);
+    }
+    crate::ui_interface::set_options(options);
+    crate::ui_interface::set_socks(String::new(), String::new(), String::new());
+    if !crate::ui_interface::set_permanent_password_with_result(String::new()) {
+        log::warn!("The permanent password was not cleared");
+    }
+    for k in ["access_token", "user_info"] {
+        LocalConfig::set_option(k.to_owned(), String::new());
+    }
+    config::Ab::remove();
+    config::Group::remove();
+    for (id, _, _) in PeerConfig::get_vec_id_modified_time_path(&None) {
+        PeerConfig::remove(&id);
+    }
+    LocalConfig::set_fav(Vec::new());
+    let no_peers: Vec<config::DiscoveryPeer> = Vec::new();
+    config::LanPeers::store(&no_peers);
+    #[cfg(target_os = "android")]
+    crate::rendezvous_mediator::RendezvousMediator::restart();
+    log::info!("Client reset, the server has to be set up again");
 }
 
 /// The host in `address` as typed: without spaces, scheme, trailing slash or dot, in lower

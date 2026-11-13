@@ -1230,6 +1230,11 @@ pub fn main_set_up_server(address: String) -> String {
     }
 }
 
+/// SimpleDesk: "Client zurücksetzen", see `simpledesk::reset_client`.
+pub fn main_reset_client() {
+    crate::simpledesk::reset_client();
+}
+
 pub fn main_deploy_device(token: String, id: String) -> String {
     #[cfg(target_os = "android")]
     {
