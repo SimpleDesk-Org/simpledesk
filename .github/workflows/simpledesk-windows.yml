@@ -7,10 +7,6 @@ name: SimpleDesk Windows
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - simpledesk
-      - windows-build
 
 permissions:
   contents: read
@@ -323,7 +319,7 @@ jobs:
           sed -i '/dpiAware/d' res/manifest.xml
           pushd ./libs/portable
           pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          python3 ./generate.py -f ../../rustdesk/ -o . -e "../../rustdesk/$APP_NAME.exe"
           popd
           mv ./target/release/rustdesk-portable-packer.exe "./out/$OUT_NAME.exe"
 
@@ -338,13 +334,11 @@ jobs:
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
 
       - name: Build msi
-        # preprocess.py looks for <app name>.exe in the dist folder, so a copy with the
-        # renamed exe is used. The MSI then installs as SimpleDesk, like the built-in installer.
+        # preprocess.py looks for <app name>.exe in the dist folder. Flutter builds
+        # SimpleDesk.exe (BINARY_NAME), so the MSI installs as SimpleDesk.
         run: |
-          Copy-Item -Recurse ./rustdesk ./msi-dist
-          Rename-Item ./msi-dist/rustdesk.exe "$env:APP_NAME.exe"
           pushd ./res/msi
-          python preprocess.py --arp -d ../../msi-dist --app-name "$env:APP_NAME" -m "$env:MSI_MANUFACTURER"
+          python preprocess.py --arp -d ../../rustdesk --app-name "$env:APP_NAME" -m "$env:MSI_MANUFACTURER"
           if ($LASTEXITCODE -ne 0) { throw "preprocess.py failed with $LASTEXITCODE" }
           nuget restore msi.sln
           msbuild msi.sln -p:Configuration=Release -p:Platform=x64 /p:TargetVersion=Windows10

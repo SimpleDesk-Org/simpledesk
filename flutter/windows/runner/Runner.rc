@@ -92,9 +92,9 @@ BEGIN
             VALUE "CompanyName", "Purslane Tech Pte. Ltd." "\0"
             VALUE "FileDescription", "SimpleDesk Remote Desktop" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "rustdesk" "\0"
+            VALUE "InternalName", "SimpleDesk" "\0"
             VALUE "LegalCopyright", "Copyright © 2026 Purslane Tech Pte. Ltd. and SimpleDesk contributors. AGPL-3.0." "\0"
-            VALUE "OriginalFilename", "rustdesk.exe" "\0"
+            VALUE "OriginalFilename", "SimpleDesk.exe" "\0"
             VALUE "ProductName", "SimpleDesk" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
