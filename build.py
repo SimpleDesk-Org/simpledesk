@@ -380,7 +380,7 @@ def ffi_bindgen_function_refactor():
         'sed -i "s/ffi.NativeFunction<ffi.Bool Function(DartPort/ffi.NativeFunction<ffi.Uint8 Function(DartPort/g" flutter/lib/generated_bridge.dart')
 
 
-# libdrmtap is fetched at build time from the rustdesk-org fork at a pinned
+# libdrmtap is fetched at build time from the SimpleDesk-Org fork at a pinned
 # commit — the same way rustdesk sources its other native build deps (vcpkg,
 # flutter_rust_bridge, ...), rather than carrying a git submodule. It is the ONLY
 # pin for the drm backend: rustdesk dlopens this .so at runtime and does not depend on
@@ -391,7 +391,7 @@ def ffi_bindgen_function_refactor():
 # build_libdrmtap_so(). This is the SINGLE source of truth for the pin, deliberately not duplicated in
 # any workflow, so a bump is one edit here (plus the informational version comment in
 # libs/scrap/Cargo.toml). This commit is libdrmtap v0.5.12.
-LIBDRMTAP_REPO_PINNED = 'https://github.com/rustdesk-org/libdrmtap'
+LIBDRMTAP_REPO_PINNED = 'https://github.com/SimpleDesk-Org/libdrmtap'
 LIBDRMTAP_SHA_PINNED = '5936a7a88b94aa43516a3dd0eb509d2383f31e2d'
 LIBDRMTAP_REPO = os.environ.get('DRMTAP_REPO', LIBDRMTAP_REPO_PINNED)
 LIBDRMTAP_SHA = os.environ.get('DRMTAP_SHA', LIBDRMTAP_SHA_PINNED)
@@ -471,7 +471,7 @@ def _single_real_so(paths, where):
 
 
 def build_libdrmtap_so():
-    # Build libdrmtap.so from the rustdesk-org fork, fetched at the pinned LIBDRMTAP_SHA. The
+    # Build libdrmtap.so from the SimpleDesk-Org fork, fetched at the pinned LIBDRMTAP_SHA. The
     # pivot dlopen-s this .so in-process in the root service (which already holds
     # CAP_SYS_ADMIN) — no setcap helper, no privileged child. Only the shared
     # library target is built (the source also carries a helper binary we do not

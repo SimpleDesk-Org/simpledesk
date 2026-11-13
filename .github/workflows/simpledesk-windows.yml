@@ -115,7 +115,7 @@ jobs:
 
       - name: Download the source code
         run: |
-          git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
+          git clone https://github.com/SimpleDesk-Org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
 
       - name: Build the project
         run: |
@@ -186,7 +186,8 @@ jobs:
         run: |
           flutter doctor -v
           flutter precache --windows
-          Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
+          Invoke-WebRequest -Uri https://github.com/SimpleDesk-Org/simpledesk-build-deps/releases/download/flutter-engine-windows-x64-2024-12-01/windows-x64-release.zip -OutFile windows-x64-release.zip
+          if ((Get-FileHash windows-x64-release.zip -Algorithm SHA256).Hash -ne 'ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e') { throw 'windows-x64-release.zip: sha256 mismatch' }
           Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
           mv -Force windows-x64-release/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
 
@@ -243,7 +244,8 @@ jobs:
           mv ./flutter/build/windows/${{ env.FLUTTER_ARCH }}/runner/Release ./rustdesk
 
           # Download usbmmidd_v2.zip and extract it to ./rustdesk
-          Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
+          Invoke-WebRequest -Uri https://github.com/SimpleDesk-Org/simpledesk-build-deps/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
+          if ((Get-FileHash usbmmidd_v2.zip -Algorithm SHA256).Hash -ne '629b51e9944762bae73948171c65d09a79595cf4c771a82ebc003fbba5b24f51') { throw 'usbmmidd_v2.zip: sha256 mismatch' }
           Expand-Archive usbmmidd_v2.zip -DestinationPath .
           Remove-Item -Path usbmmidd_v2\Win32 -Recurse
           Remove-Item -Path "usbmmidd_v2\deviceinstaller64.exe", "usbmmidd_v2\deviceinstaller.exe", "usbmmidd_v2\usbmmidd.bat"
@@ -251,14 +253,13 @@ jobs:
 
           # Download printer driver files and extract them to ./rustdesk
           try {
-            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/rustdesk_printer_driver_v4-1.4.zip -OutFile rustdesk_printer_driver_v4-1.4.zip
-            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/printer_driver_adapter.zip -OutFile printer_driver_adapter.zip
-            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/sha256sums -OutFile sha256sums
+            Invoke-WebRequest -Uri https://github.com/SimpleDesk-Org/simpledesk-build-deps/releases/download/printer-driver-v4-1.4/rustdesk_printer_driver_v4-1.4.zip -OutFile rustdesk_printer_driver_v4-1.4.zip
+            Invoke-WebRequest -Uri https://github.com/SimpleDesk-Org/simpledesk-build-deps/releases/download/printer-driver-v4-1.4/printer_driver_adapter.zip -OutFile printer_driver_adapter.zip
 
             # Check and move the files
-            $checksum_driver = (Select-String -Path .\sha256sums -Pattern '^([a-fA-F0-9]{64}) \*rustdesk_printer_driver_v4-1.4\.zip$').Matches.Groups[1].Value
+            $checksum_driver = 'c4cf4d3b48c4d9079b243edc43bb1db03b076282bc259c9f49883e9db20fa8b5'
             $downloadsum_driver = Get-FileHash -Path rustdesk_printer_driver_v4-1.4.zip -Algorithm SHA256
-            $checksum_adapter = (Select-String -Path .\sha256sums -Pattern '^([a-fA-F0-9]{64}) \*printer_driver_adapter\.zip$').Matches.Groups[1].Value
+            $checksum_adapter = 'e90e5d52c8807b4c6293c78a52479338715e0bf396b1b34802777b8c452e6781'
             $downloadsum_adapter = Get-FileHash -Path printer_driver_adapter.zip -Algorithm SHA256
             if ($checksum_driver -eq $downloadsum_driver.Hash -and $checksum_adapter -eq $downloadsum_adapter.Hash) {
                 Write-Output "rustdesk_printer_driver_v4-1.4, checksums match, extract the file."
