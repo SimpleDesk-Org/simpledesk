@@ -10,9 +10,6 @@ env:
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - simpledesk
 jobs:
   # ensure_cargo_fmt:
   #   name: Ensure 'cargo fmt' has been run
