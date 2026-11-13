@@ -21,6 +21,7 @@ Der Client wird mit GitHub Actions gebaut:
 
 - `.github/workflows/simpledesk-ci.yml`: Build und Tests unter Linux
 - `.github/workflows/simpledesk-windows.yml`: Windows x86_64
+- `.github/workflows/simpledesk-android.yml`: Android arm64, Anleitung in [BUILD-ANDROID.md](BUILD-ANDROID.md)
 
 ## Lizenz
 
