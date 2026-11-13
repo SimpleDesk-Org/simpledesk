@@ -28,7 +28,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
 import '../../common/widgets/server_setup.dart';
-import '../widgets/tabbar_widget.dart';
+import '../widgets/tabbar_widget.dart' show DesktopTabController;
 
 const double _kTabWidth = 200;
 const double _kTabHeight = 42;
