@@ -14,6 +14,19 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// SimpleDesk: the release key comes from android/key.properties (never committed) or, in CI,
+// from SIMPLEDESK_KEYSTORE_FILE, SIMPLEDESK_KEYSTORE_PASSWORD, SIMPLEDESK_KEY_ALIAS and
+// SIMPLEDESK_KEY_PASSWORD. Without one, release builds use the debug key: such an APK installs
+// for a test, but cannot update one signed with the release key.
+def signingValue = { String property, String env ->
+    def value = keystoreProperties[property] ?: System.getenv(env)
+    return value ? value.toString() : null
+}
+def releaseStoreFile = signingValue('storeFile', 'SIMPLEDESK_KEYSTORE_FILE')
+if (!releaseStoreFile) {
+    logger.warn("SimpleDesk: no release key (key.properties or SIMPLEDESK_KEYSTORE_FILE), release builds use the debug key")
+}
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -107,18 +120,16 @@ android {
 
     signingConfigs {
       release {
-        keyAlias keystoreProperties['keyAlias']
-        keyPassword keystoreProperties['keyPassword']
-        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-        storePassword keystoreProperties['storePassword']
+        keyAlias signingValue('keyAlias', 'SIMPLEDESK_KEY_ALIAS')
+        keyPassword signingValue('keyPassword', 'SIMPLEDESK_KEY_PASSWORD')
+        storeFile releaseStoreFile ? file(releaseStoreFile) : null
+        storePassword signingValue('storePassword', 'SIMPLEDESK_KEYSTORE_PASSWORD')
       }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.release
+            signingConfig releaseStoreFile ? signingConfigs.release : signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules'
         }
     }
