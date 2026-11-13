@@ -45,23 +45,6 @@ class _DropDownAction extends StatelessWidget {
         tooltip: "",
         icon: const Icon(Icons.more_vert),
         itemBuilder: (context) {
-          listTile(String text, bool checked) {
-            return ListTile(
-                title: Text(translate(text)),
-                trailing: Icon(
-                  Icons.check,
-                  color: checked ? null : Colors.transparent,
-                ));
-          }
-
-          final approveMode = gFFI.serverModel.approveMode;
-          final verificationMethod = gFFI.serverModel.verificationMethod;
-          final showPasswordOption = approveMode != 'click';
-          final isApproveModeFixed = isOptionFixed(kOptionApproveMode);
-          final isNumericOneTimePasswordFixed =
-              isOptionFixed(kOptionAllowNumericOneTimePassword);
-          final isAllowNumericOneTimePassword =
-              gFFI.serverModel.allowNumericOneTimePassword;
           return [
             // SimpleDesk: only an admin may change the ID, and the server checks it.
             if (!isChangeIdDisabled() && canChangeId)
@@ -71,66 +54,12 @@ class _DropDownAction extends StatelessWidget {
                 child: Text(translate("Change ID")),
               ),
             if (!isChangeIdDisabled() && canChangeId) const PopupMenuDivider(),
-            PopupMenuItem(
-              value: 'AcceptSessionsViaPassword',
-              child: listTile(
-                  'Accept sessions via password', approveMode == 'password'),
-              enabled: !isApproveModeFixed,
-            ),
-            PopupMenuItem(
-              value: 'AcceptSessionsViaClick',
-              child:
-                  listTile('Accept sessions via click', approveMode == 'click'),
-              enabled: !isApproveModeFixed,
-            ),
-            PopupMenuItem(
-              value: "AcceptSessionsViaBoth",
-              child: listTile("Accept sessions via both",
-                  approveMode != 'password' && approveMode != 'click'),
-              enabled: !isApproveModeFixed,
-            ),
-            if (showPasswordOption) const PopupMenuDivider(),
-            if (showPasswordOption &&
-                verificationMethod != kUseTemporaryPassword &&
-                !isChangePermanentPasswordDisabled())
+            // SimpleDesk: approve mode and verification method are fixed (both passwords
+            // work), so like on desktop only the permanent password is left to set.
+            if (!isChangePermanentPasswordDisabled())
               PopupMenuItem(
                 value: "setPermanentPassword",
                 child: Text(translate("Set permanent password")),
-              ),
-            if (showPasswordOption &&
-                verificationMethod != kUsePermanentPassword)
-              PopupMenuItem(
-                value: "setTemporaryPasswordLength",
-                child: Text(translate("One-time password length")),
-              ),
-            if (showPasswordOption &&
-                verificationMethod != kUsePermanentPassword)
-              PopupMenuItem(
-                value: "allowNumericOneTimePassword",
-                child: listTile(translate("Numeric one-time password"),
-                    isAllowNumericOneTimePassword),
-                enabled: !isNumericOneTimePasswordFixed,
-              ),
-            if (showPasswordOption) const PopupMenuDivider(),
-            if (showPasswordOption)
-              PopupMenuItem(
-                value: kUseTemporaryPassword,
-                child: listTile('Use one-time password',
-                    verificationMethod == kUseTemporaryPassword),
-              ),
-            if (showPasswordOption)
-              PopupMenuItem(
-                value: kUsePermanentPassword,
-                child: listTile('Use permanent password',
-                    verificationMethod == kUsePermanentPassword),
-              ),
-            if (showPasswordOption)
-              PopupMenuItem(
-                value: kUseBothPasswords,
-                child: listTile(
-                    'Use both passwords',
-                    verificationMethod != kUseTemporaryPassword &&
-                        verificationMethod != kUsePermanentPassword),
               ),
           ];
         },
@@ -509,59 +438,72 @@ class ServerInfo extends StatelessWidget {
     return PaddingCard(
         title: translate('Your Device'),
         child: Column(
-          // ID
           children: [
-            Row(children: [
-              const Icon(Icons.perm_identity,
-                      color: Colors.grey, size: iconSize)
-                  .marginOnly(right: iconMarginRight),
-              Text(
-                translate('ID'),
-                style: textStyleHeading,
-              )
-            ]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(
-                model.serverId.value.text,
-                style: textStyleValue,
+            // SimpleDesk: no ID and password until an admin assigned the ID.
+            IdAssignedGate(
+              child: Column(
+                // ID
+                children: [
+                  Row(children: [
+                    const Icon(Icons.perm_identity,
+                            color: Colors.grey, size: iconSize)
+                        .marginOnly(right: iconMarginRight),
+                    Text(
+                      translate('ID'),
+                      style: textStyleHeading,
+                    )
+                  ]),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          model.serverId.value.text,
+                          style: textStyleValue,
+                        ),
+                        IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: Icon(Icons.copy_outlined),
+                            onPressed: () {
+                              copyToClipboard(model.serverId.value.text.trim());
+                            })
+                      ]).marginOnly(left: 39, bottom: 10),
+                  // Password
+                  Row(children: [
+                    const Icon(Icons.lock_outline,
+                            color: Colors.grey, size: iconSize)
+                        .marginOnly(right: iconMarginRight),
+                    Text(
+                      translate('One-time Password'),
+                      style: textStyleHeading,
+                    )
+                  ]),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          !showOneTime ? '-' : model.serverPasswd.value.text,
+                          style: textStyleValue,
+                        ),
+                        !showOneTime
+                            ? SizedBox.shrink()
+                            : Row(children: [
+                                IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    icon: const Icon(Icons.refresh),
+                                    onPressed: () =>
+                                        bind.mainUpdateTemporaryPassword()),
+                                IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    icon: Icon(Icons.copy_outlined),
+                                    onPressed: () {
+                                      copyToClipboard(
+                                          model.serverPasswd.value.text.trim());
+                                    })
+                              ])
+                      ]).marginOnly(left: 40, bottom: 15),
+                ],
               ),
-              IconButton(
-                  visualDensity: VisualDensity.compact,
-                  icon: Icon(Icons.copy_outlined),
-                  onPressed: () {
-                    copyToClipboard(model.serverId.value.text.trim());
-                  })
-            ]).marginOnly(left: 39, bottom: 10),
-            // Password
-            Row(children: [
-              const Icon(Icons.lock_outline, color: Colors.grey, size: iconSize)
-                  .marginOnly(right: iconMarginRight),
-              Text(
-                translate('One-time Password'),
-                style: textStyleHeading,
-              )
-            ]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(
-                !showOneTime ? '-' : model.serverPasswd.value.text,
-                style: textStyleValue,
-              ),
-              !showOneTime
-                  ? SizedBox.shrink()
-                  : Row(children: [
-                      IconButton(
-                          visualDensity: VisualDensity.compact,
-                          icon: const Icon(Icons.refresh),
-                          onPressed: () => bind.mainUpdateTemporaryPassword()),
-                      IconButton(
-                          visualDensity: VisualDensity.compact,
-                          icon: Icon(Icons.copy_outlined),
-                          onPressed: () {
-                            copyToClipboard(
-                                model.serverPasswd.value.text.trim());
-                          })
-                    ])
-            ]).marginOnly(left: 40, bottom: 15),
+            ),
             ConnectionStateNotification()
           ],
         ));

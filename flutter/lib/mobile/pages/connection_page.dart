@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_hbb/models/peer_model.dart';
 
 import '../../common.dart';
+import '../../common/widgets/login.dart';
 import '../../common/widgets/peer_tab_page.dart';
 import '../../common/widgets/autocomplete.dart';
 import '../../consts.dart';
@@ -80,6 +81,51 @@ class _ConnectionPageState extends State<ConnectionPage> {
   @override
   Widget build(BuildContext context) {
     Provider.of<FfiModel>(context);
+    // SimpleDesk: connecting to other devices needs a login (account and Lizenz at
+    // Eider). Being helped on the "Share screen" page works without one.
+    return Obx(() => gFFI.userModel.isLogin
+        ? _buildConnect(context)
+        : _buildLoginGate(context));
+  }
+
+  Widget _buildLoginGate(BuildContext context) {
+    final hint = Theme.of(context).hintColor;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_outline, size: 48, color: hint),
+            const SizedBox(height: 16),
+            Text('Bei SimpleDesk anmelden',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(
+              'Um dich mit anderen Geräten zu verbinden, melde dich mit deinem Eider-Konto an. Konto und Lizenz bekommst du von der IT.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: hint),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.login),
+              label: const Text('Anmelden'),
+              onPressed: () => loginDialog(),
+            ),
+            if (isAndroid && !bind.isOutgoingOnly())
+              Text(
+                'Hilfe bekommen geht auch ohne Anmeldung: unten bei „${translate('Share screen')}“.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: hint),
+              ).marginOnly(top: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConnect(BuildContext context) {
     return CustomScrollView(
       slivers: [
         SliverList(

@@ -32,8 +32,9 @@ class SettingsPage extends StatefulWidget implements PageShape {
   @override
   final icon = Icon(Icons.settings);
 
+  // SimpleDesk: no QR code import of server settings; the server is set up once.
   @override
-  final appBarActions = bind.isDisableSettings() ? [] : [ScanButton()];
+  final appBarActions = <Widget>[];
 
   @override
   State<SettingsPage> createState() => _SettingsState();

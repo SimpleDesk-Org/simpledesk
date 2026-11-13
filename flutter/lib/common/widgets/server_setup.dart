@@ -13,6 +13,10 @@ final serverSetupNeeded = RxBool(!bind.mainIsServerSetUp());
 Widget serverSetupGate(Widget child) =>
     Obx(() => serverSetupNeeded.value ? const ServerSetupPage() : child);
 
+/// [child], hidden while no server is set up (the tabs on mobile).
+Widget hiddenDuringServerSetup(Widget child) =>
+    Obx(() => serverSetupNeeded.value ? const SizedBox.shrink() : child);
+
 /// Asks before "Client zurücksetzen" and says what it clears. [onDone] runs after the reset.
 void resetClientDialog({VoidCallback? onDone}) {
   gFFI.dialogManager.show((setState, close, context) {

@@ -80,7 +80,8 @@ class HomePageState extends State<HomePage> {
             title: appTitle(),
             actions: _pages.elementAt(_selectedIndex).appBarActions,
           ),
-          bottomNavigationBar: BottomNavigationBar(
+          // SimpleDesk: no tabs on the "Server einrichten" screen.
+          bottomNavigationBar: hiddenDuringServerSetup(BottomNavigationBar(
             key: navigationBarKey,
             items: _pages
                 .map((page) =>
@@ -102,7 +103,7 @@ class HomePageState extends State<HomePage> {
                 }
               }
             }),
-          ),
+          )),
           // SimpleDesk: until a server is set up, only the "Server einrichten" screen.
           body: serverSetupGate(_pages.elementAt(_selectedIndex)),
         ));
