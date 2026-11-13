@@ -71,15 +71,9 @@ class DesktopSettingPage extends StatefulWidget {
         !bind.isDisableSettings() &&
         bind.mainGetBuildinOption(key: kOptionHideSecuritySetting) != 'Y')
       SettingsTabKey.safety,
-    if (!bind.isDisableSettings() &&
-        bind.mainGetBuildinOption(key: kOptionHideNetworkSetting) != 'Y')
-      SettingsTabKey.network,
-    if (!bind.isIncomingOnly()) SettingsTabKey.display,
+    // SimpleDesk: no network, display and printer settings. The server is set up once,
+    // the rest keeps its defaults or a fixed value (FIXED_OPTIONS in simpledesk-common).
     if (!bind.isDisableAccount()) SettingsTabKey.account,
-    if (isWindows &&
-        !bind.isDisableSettings() &&
-        bind.mainGetBuildinOption(key: kOptionHideRemotePrinterSetting) != 'Y')
-      SettingsTabKey.printer,
     SettingsTabKey.about,
   ];
 
@@ -414,16 +408,10 @@ class _GeneralState extends State<_General> {
     final scrollController = ScrollController();
     return ListView(
       controller: scrollController,
+      // SimpleDesk: only language and theme; everything else keeps its default.
       children: [
-        if (!isWeb) service(),
-        theme(),
         _Card(title: 'Language', children: [language()]),
-        if (!isWeb) hwcodec(),
-        if (!isWeb) audio(context),
-        if (!isWeb) record(context),
-        if (!isWeb) WaylandCard(),
-        other(),
-        if (!bind.isIncomingOnly()) keyboardShortcuts(),
+        theme(),
       ],
     ).marginOnly(bottom: _kListViewBottomMargin);
   }
@@ -1036,13 +1024,11 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
             }),
             preventMouseKeyBuilder(
               block: locked,
+              // SimpleDesk: only the permanent password and 2FA. Permissions, ID, direct
+              // IP access, LAN discovery and the like keep their defaults or a fixed value.
               child: Column(children: [
-                permissions(context),
-                password(context),
+                simpleDeskPassword(context),
                 _Card(title: '2FA', children: [tfa()]),
-                if (!isChangeIdDisabled())
-                  _Card(title: 'ID', children: [changeId()]),
-                more(context),
               ]),
             ),
           ],
@@ -1292,6 +1278,22 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
     }
 
     return tmpWrapper();
+  }
+
+  // SimpleDesk: the one-time password and the permanent password both work
+  // (verification-method is fixed), so setting the permanent one is all that is left.
+  Widget simpleDeskPassword(BuildContext context) {
+    return _Card(title: 'Password', children: [
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'Mit einem permanenten Passwort kann die IT sich auch verbinden, wenn gerade niemand das Einmal-Passwort durchgeben kann.',
+          style: TextStyle(color: disabledTextColor(context, !locked)),
+        ),
+      ).marginOnly(left: _kContentHMargin),
+      _Button('Set permanent password', setPasswordDialog,
+          enabled: !locked && !isChangePermanentPasswordDisabled()),
+    ]);
   }
 
   Widget password(BuildContext context) {

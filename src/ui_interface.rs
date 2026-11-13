@@ -230,6 +230,7 @@ pub fn is_option_fixed(key: &str) -> bool {
             .unwrap()
             .contains_key(key)
         || config::OVERWRITE_SETTINGS.read().unwrap().contains_key(key)
+        || hbb_common::simpledesk::fixed_option(key).is_some()
 }
 
 #[inline]
