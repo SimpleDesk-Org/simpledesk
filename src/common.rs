@@ -1328,7 +1328,7 @@ fn get_api_server_(api: String, custom: String) -> String {
             return format!("http://{}", s);
         }
     }
-    // SimpleDesk: never admin.rustdesk.com.
+    // SimpleDesk: never RustDesk's API server.
     hbb_common::simpledesk::API_SERVER.to_owned()
 }
 
