@@ -2675,7 +2675,7 @@ class _AboutState extends State<_About> {
                       .marginSymmetric(vertical: 4.0)),
               InkWell(
                   onTap: () {
-                    launchUrlString('https://github.com/felixthedevgit/simpledesk');
+                    launchUrlString('https://github.com/SimpleDesk-Org/simpledesk');
                   },
                   child: Text(
                     translate('Privacy Statement'),
@@ -2683,7 +2683,7 @@ class _AboutState extends State<_About> {
                   ).marginSymmetric(vertical: 4.0)),
               InkWell(
                   onTap: () {
-                    launchUrlString('https://github.com/felixthedevgit/simpledesk');
+                    launchUrlString('https://github.com/SimpleDesk-Org/simpledesk');
                   },
                   child: Text(
                     translate('Website'),

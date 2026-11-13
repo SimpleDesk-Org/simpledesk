@@ -39,7 +39,7 @@ class SettingsPage extends StatefulWidget implements PageShape {
   State<SettingsPage> createState() => _SettingsState();
 }
 
-const url = 'https://github.com/felixthedevgit/simpledesk';
+const url = 'https://github.com/SimpleDesk-Org/simpledesk';
 
 enum KeepScreenOn {
   never,
@@ -842,7 +842,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
             SettingsTile(
               title: Text(translate("Privacy Statement")),
               onPressed: (context) =>
-                  launchUrlString('https://github.com/felixthedevgit/simpledesk'),
+                  launchUrlString('https://github.com/SimpleDesk-Org/simpledesk'),
               leading: Icon(Icons.privacy_tip),
             )
           ],
@@ -955,7 +955,7 @@ void showAbout(OverlayDialogManager dialogManager) {
         Text('Version: $version'),
         InkWell(
             onTap: () async {
-              const url = 'https://github.com/felixthedevgit/simpledesk';
+              const url = 'https://github.com/SimpleDesk-Org/simpledesk';
               await launchUrl(Uri.parse(url));
             },
             child: Padding(

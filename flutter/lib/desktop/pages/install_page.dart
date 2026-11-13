@@ -233,9 +233,9 @@ class _InstallPageBodyState extends State<_InstallPageBody>
                           InkWell(
                             hoverColor: Colors.transparent,
                             onTap: () => launchUrlString(
-                                'https://github.com/felixthedevgit/simpledesk'),
+                                'https://github.com/SimpleDesk-Org/simpledesk'),
                             child: Tooltip(
-                              message: 'https://github.com/felixthedevgit/simpledesk',
+                              message: 'https://github.com/SimpleDesk-Org/simpledesk',
                               child: Row(children: [
                                 Icon(Icons.launch_outlined, size: 16)
                                     .marginOnly(right: 5),
