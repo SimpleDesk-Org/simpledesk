@@ -436,6 +436,10 @@ impl Client {
         if config::is_incoming_only() && !is_switch_sides_back(conn_type, &interface).await {
             bail!("Incoming only mode");
         }
+        // SimpleDesk: no direct IP access, every connection goes through the server.
+        if hbb_common::is_ip_str(peer) || hbb_common::is_domain_port_str(peer) {
+            bail!("Direkte IP-Verbindungen sind in SimpleDesk aus. Verbinde dich über die ID.");
+        }
         // to-do: remember the port for each peer, so that we can retry easier
         if hbb_common::is_ip_str(peer) {
             return Ok((
@@ -472,6 +476,10 @@ impl Client {
         } else {
             (peer, "", key, token)
         };
+        // SimpleDesk: an ID like "id@server" may only name a server that is allowed.
+        if !other_server.is_empty() {
+            hbb_common::simpledesk::check_server_allowed(other_server)?;
+        }
         let (rendezvous_server, servers, contained) = if other_server.is_empty() {
             crate::get_rendezvous_server(1_000).await
         } else {
@@ -1861,6 +1869,8 @@ impl Client {
         ipv4: bool,
     ) -> ResultType<Stream> {
         crate::common::check_relay_uuid(&uuid)?;
+        // SimpleDesk: only a relay that is allowed, see hbb_common::simpledesk.
+        hbb_common::simpledesk::check_server_allowed(&relay_server)?;
         // The proxy's address family does not constrain the relay target.
         let relay_server = check_port(relay_server, RELAY_PORT);
         let use_ws_proxy = Config::is_proxy() && is_ws_endpoint(&check_ws(&relay_server));

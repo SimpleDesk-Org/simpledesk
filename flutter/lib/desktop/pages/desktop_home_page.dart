@@ -9,6 +9,7 @@ import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/common/widgets/animated_rotation_widget.dart';
 import 'package:flutter_hbb/common/widgets/custom_password.dart';
 import 'package:flutter_hbb/common/widgets/login.dart';
+import 'package:flutter_hbb/common/widgets/server_setup.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
@@ -60,7 +61,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget build(BuildContext context) {
     super.build(context);
     final isIncomingOnly = bind.isIncomingOnly();
-    return _buildBlock(
+    // SimpleDesk: until a server is set up, only the "Server einrichten" screen.
+    return serverSetupGate(_buildBlock(
         child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -74,7 +76,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                   ? buildRightPane(context)
                   : buildLoginGate(context))),
       ],
-    ));
+    )));
   }
 
   Widget buildLoginGate(BuildContext context) {

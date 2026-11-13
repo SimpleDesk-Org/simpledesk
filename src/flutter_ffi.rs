@@ -1211,6 +1211,30 @@ pub fn main_get_api_server() -> String {
     get_api_server()
 }
 
+/// SimpleDesk: whether a server is set up; until then the UI shows the setup screen.
+pub fn main_is_server_set_up() -> SyncReturn<bool> {
+    SyncReturn(crate::simpledesk::is_server_set_up())
+}
+
+/// SimpleDesk: the server built into the program, to prefill the setup screen.
+pub fn main_get_default_server() -> SyncReturn<String> {
+    SyncReturn(hbb_common::simpledesk::SERVER.to_owned())
+}
+
+/// SimpleDesk: sets the client up for the server at `address`. Empty on success, otherwise
+/// the code of the reason for the setup screen.
+pub fn main_set_up_server(address: String) -> String {
+    match crate::simpledesk::set_up_server(&address) {
+        Ok(()) => String::new(),
+        Err(e) => e.code().to_owned(),
+    }
+}
+
+/// SimpleDesk: "Client zurücksetzen", see `simpledesk::reset_client`.
+pub fn main_reset_client() {
+    crate::simpledesk::reset_client();
+}
+
 pub fn main_deploy_device(token: String, id: String) -> String {
     #[cfg(target_os = "android")]
     {

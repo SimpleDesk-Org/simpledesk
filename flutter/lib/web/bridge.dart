@@ -938,6 +938,23 @@ class RustdeskImpl {
     return Future(() => js.context.callMethod('getByName', ['api_server']));
   }
 
+  // SimpleDesk: the web client gets its server from the page, so there is no setup screen.
+  bool mainIsServerSetUp({dynamic hint}) {
+    return true;
+  }
+
+  String mainGetDefaultServer({dynamic hint}) {
+    return '';
+  }
+
+  Future<String> mainSetUpServer({required String address, dynamic hint}) {
+    return Future.value('invalid');
+  }
+
+  Future<void> mainResetClient({dynamic hint}) {
+    return Future.value();
+  }
+
   Future<void> mainPostRequest(
       {required String url,
       required String body,

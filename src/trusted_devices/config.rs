@@ -238,7 +238,9 @@ pub fn set_password(value: &str) -> ResultType<bool> {
 }
 
 pub fn changes_password(value: &str) -> bool {
-    if Config::is_disable_change_permanent_password() {
+    if Config::is_disable_change_permanent_password()
+        || !hbb_common::simpledesk::is_permanent_password_allowed(value)
+    {
         return false;
     }
     let (password, salt) = Config::get_local_permanent_password_storage_and_salt();
