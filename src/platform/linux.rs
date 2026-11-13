@@ -99,7 +99,7 @@ lazy_static::lazy_static! {
     static ref GNOME_MONITOR_LAYOUT_MODE_CACHE: std::sync::Mutex<
         Option<(Instant, Option<GnomeMonitorLayoutMode>)>,
     > = Default::default();
-    // https://github.com/rustdesk/rustdesk/issues/13705
+    // RustDesk issue #13705
     // Check if `sudo -E` actually preserves environment.
     //
     // This flag is only used by `run_as_user()` (root service -> user session). If the current process is not
@@ -343,7 +343,7 @@ static X_UNEXPECTED_ERROR_DETECTED: AtomicBool = AtomicBool::new(false);
 
 /// Custom X error handler that catches BadWindow errors (error_code == 3) instead of
 /// letting the default handler terminate the process.
-/// See issue: https://github.com/rustdesk/rustdesk/issues/9003
+/// See issue: RustDesk issue #9003
 unsafe extern "C" fn handle_x_error(_display: *mut c_void, event: *mut XErrorEvent) -> c_int {
     if !event.is_null() && (*event).error_code == X11_BAD_WINDOW {
         X_BAD_WINDOW_DETECTED.store(true, Ordering::SeqCst);
@@ -1356,7 +1356,7 @@ pub fn start_os_service() {
 
         let keeps_session = sid == desktop.sid;
         if keeps_session {
-            // for fixing https://github.com/rustdesk/rustdesk/issues/3129 to avoid too much dbus calling,
+            // for fixing RustDesk issue #3129 to avoid too much dbus calling,
             sleep_millis(500);
         } else {
             sleep_millis(super::SERVICE_INTERVAL);
@@ -1556,7 +1556,7 @@ pub fn is_locked() -> bool {
     let values = get_values_of_seat0(&[0]);
     // Though the values can't be empty, we still add check here for safety.
     // Because we cannot guarantee whether the internal implementation will change in the future.
-    // https://github.com/rustdesk/hbb_common/blob/ebb4d4a48cf7ed6ca62e93f8ed124065c6408536/src/platform/linux.rs#L119
+    // hbb_common src/platform/linux.rs
     if values.is_empty() {
         log::debug!("Failed to check is locked, values vector is empty.");
         return false;
@@ -2274,7 +2274,7 @@ mod desktop {
     /// A compositor that runs Xwayland without exporting `XAUTHORITY` (wlroots, e.g. Hyprland)
     /// still hands out a usable session through the Wayland side. Requiring xauth there never
     /// succeeded, so every refresh ran the retry loop to the end.
-    /// https://github.com/rustdesk/rustdesk/issues/15952
+    /// RustDesk issue #15952
     fn is_session_env_complete(envs: &std::collections::HashMap<&str, String>) -> bool {
         let value = |key: &str| envs.get(key).map_or("", |v| v.as_str());
         !value(ENV_KEY_DISPLAY).is_empty()
@@ -3045,7 +3045,7 @@ pub fn check_autostart_config() -> ResultType<()> {
     let app_name = crate::get_app_name().to_lowercase();
     let path = format!("{home}/.config/autostart");
     let file = format!("{path}/{app_name}.desktop");
-    // https://github.com/rustdesk/rustdesk/issues/4863
+    // RustDesk issue #4863
     std::fs::remove_file(&file).ok();
     /*
         std::fs::create_dir_all(&path).ok();
