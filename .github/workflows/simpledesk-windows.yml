@@ -245,9 +245,6 @@ jobs:
         run: |
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
           mv ./flutter/build/windows/${{ env.FLUTTER_ARCH }}/runner/Release ./rustdesk
-          # Ship the exe as SimpleDesk.exe everywhere. The portable exe names its
-          # %LOCALAPPDATA% folder after it, so it never shares RustDesk's folder.
-          Rename-Item ./rustdesk/rustdesk.exe "$env:APP_NAME.exe"
 
           # Download usbmmidd_v2.zip and extract it to ./rustdesk
           Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
@@ -341,8 +338,8 @@ jobs:
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
 
       - name: Build msi
-        # preprocess.py looks for <app name>.exe in the dist folder, which holds
-        # SimpleDesk.exe since the build step. The MSI then installs as SimpleDesk.
+        # preprocess.py looks for <app name>.exe in the dist folder. Flutter builds
+        # SimpleDesk.exe (BINARY_NAME), so the MSI installs as SimpleDesk.
         run: |
           pushd ./res/msi
           python preprocess.py --arp -d ../../rustdesk --app-name "$env:APP_NAME" -m "$env:MSI_MANUFACTURER"
