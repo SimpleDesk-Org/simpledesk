@@ -1335,7 +1335,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
       Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          'Mit einem permanenten Passwort kann die IT sich auch verbinden, wenn gerade niemand das Einmal-Passwort durchgeben kann.',
+          'Mit einem permanenten Passwort kann die IT sich auch verbinden, wenn gerade niemand das Einmal-Passwort durchgeben kann. Es braucht mindestens 8 Zeichen.',
           style: TextStyle(color: disabledTextColor(context, !locked)),
         ),
       ).marginOnly(left: _kContentHMargin),
