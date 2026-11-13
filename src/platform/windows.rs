@@ -1252,6 +1252,21 @@ pub fn portable_service_logon_helper_paths() -> Option<(PathBuf, PathBuf)> {
     Some((dir, dst))
 }
 
+/// SimpleDesk: seconds since the last keyboard or mouse input in this session, for the AFK
+/// state on the server. Input from a remote session counts too. None if Windows cannot tell.
+pub fn idle_secs() -> Option<u64> {
+    let mut info = LASTINPUTINFO {
+        cbSize: std::mem::size_of::<LASTINPUTINFO>() as u32,
+        dwTime: 0,
+    };
+    if unsafe { GetLastInputInfo(&mut info) } == 0 {
+        return None;
+    }
+    // Both are milliseconds since boot that wrap after 49.7 days, so subtract with wrapping.
+    let now = unsafe { winapi::um::sysinfoapi::GetTickCount() };
+    Some((now.wrapping_sub(info.dwTime) / 1000) as u64)
+}
+
 pub fn is_prelogin() -> bool {
     let Some(username) = get_current_session_username() else {
         return false;

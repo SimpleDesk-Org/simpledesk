@@ -242,6 +242,10 @@ async fn start_hbbs_sync_async() {
                 }
                 let modified_at = LocalConfig::get_option("strategy_timestamp").parse::<i64>().unwrap_or(0);
                 v["modified_at"] = json!(modified_at);
+                // SimpleDesk: the server shows the device as AFK after a while without input.
+                if let Some(idle_secs) = idle_secs() {
+                    v["simpledesk_idle_secs"] = json!(idle_secs);
+                }
                 let response = crate::post_request(url.clone(), v.to_string(), "").await;
                 if let Err(err) = &response {
                     hbb_common::throttled_log!(API_LOG_INTERVAL, warn, "Heartbeat failed: {err:?}");
@@ -282,6 +286,20 @@ async fn start_hbbs_sync_async() {
                 }
             }
         }
+    }
+}
+
+/// SimpleDesk: seconds since the last input on this device. Only Windows tells it cheaply;
+/// elsewhere the field is left out and the server shows the device as active while online.
+#[cfg(not(any(target_os = "ios")))]
+fn idle_secs() -> Option<u64> {
+    #[cfg(windows)]
+    {
+        crate::platform::idle_secs()
+    }
+    #[cfg(not(windows))]
+    {
+        None
     }
 }
 
