@@ -245,6 +245,9 @@ jobs:
         run: |
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
           mv ./flutter/build/windows/${{ env.FLUTTER_ARCH }}/runner/Release ./rustdesk
+          # Ship the exe as SimpleDesk.exe everywhere. The portable exe names its
+          # %LOCALAPPDATA% folder after it, so it never shares RustDesk's folder.
+          Rename-Item ./rustdesk/rustdesk.exe "$env:APP_NAME.exe"
 
           # Download usbmmidd_v2.zip and extract it to ./rustdesk
           Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
@@ -323,7 +326,7 @@ jobs:
           sed -i '/dpiAware/d' res/manifest.xml
           pushd ./libs/portable
           pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          python3 ./generate.py -f ../../rustdesk/ -o . -e "../../rustdesk/$APP_NAME.exe"
           popd
           mv ./target/release/rustdesk-portable-packer.exe "./out/$OUT_NAME.exe"
 
@@ -338,13 +341,11 @@ jobs:
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
 
       - name: Build msi
-        # preprocess.py looks for <app name>.exe in the dist folder, so a copy with the
-        # renamed exe is used. The MSI then installs as SimpleDesk, like the built-in installer.
+        # preprocess.py looks for <app name>.exe in the dist folder, which holds
+        # SimpleDesk.exe since the build step. The MSI then installs as SimpleDesk.
         run: |
-          Copy-Item -Recurse ./rustdesk ./msi-dist
-          Rename-Item ./msi-dist/rustdesk.exe "$env:APP_NAME.exe"
           pushd ./res/msi
-          python preprocess.py --arp -d ../../msi-dist --app-name "$env:APP_NAME" -m "$env:MSI_MANUFACTURER"
+          python preprocess.py --arp -d ../../rustdesk --app-name "$env:APP_NAME" -m "$env:MSI_MANUFACTURER"
           if ($LASTEXITCODE -ne 0) { throw "preprocess.py failed with $LASTEXITCODE" }
           nuget restore msi.sln
           msbuild msi.sln -p:Configuration=Release -p:Platform=x64 /p:TargetVersion=Windows10
