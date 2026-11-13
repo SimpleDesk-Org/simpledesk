@@ -4,7 +4,7 @@ Release:    0
 Summary:    RPM package
 License:    GPL-3.0
 URL:        https://github.com/SimpleDesk-Org/simpledesk
-Vendor:     SimpleDesk <felixthedevgit@users.noreply.github.com>
+Vendor:     SimpleDesk <admin@felixthedev.com>
 Requires:   gtk3 libxcb libXfixes alsa-lib libva2 gstreamer1-plugins-base
 Recommends: libayatana-appindicator-gtk3 libxdo
 
