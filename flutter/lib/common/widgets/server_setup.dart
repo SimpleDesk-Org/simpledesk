@@ -106,6 +106,8 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
     switch (code) {
       case 'invalid':
         return 'Bitte gib nur eine Domain (zum Beispiel remote.example.de) oder eine IP-Adresse ein, ohne Port.';
+      case 'not-allowed':
+        return 'Dieser Server ist für SimpleDesk nicht freigegeben. Frag die IT nach der richtigen Adresse.';
       case 'unreachable':
         return 'Server nicht erreichbar. Prüfe die Adresse und deine Internetverbindung.';
       case 'not-simpledesk':

@@ -1284,6 +1284,10 @@ pub fn get_api_server(api: String, custom: String) -> String {
         return "".to_owned();
     }
     let mut res = get_api_server_(api, custom);
+    // SimpleDesk: no API server that is not allowed, see hbb_common::simpledesk.
+    if !hbb_common::simpledesk::is_server_allowed(&res) {
+        return "".to_owned();
+    }
     if res.ends_with('/') {
         res.pop();
     }

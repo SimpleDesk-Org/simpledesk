@@ -16,6 +16,7 @@ const SERVER_INFO_MAX_LEN: u64 = 64 * 1024;
 #[derive(Debug, PartialEq)]
 pub enum SetupError {
     Invalid,
+    NotAllowed,
     Unreachable,
     NotSimpleDesk,
 }
@@ -24,6 +25,7 @@ impl SetupError {
     pub fn code(&self) -> &'static str {
         match self {
             SetupError::Invalid => "invalid",
+            SetupError::NotAllowed => "not-allowed",
             SetupError::Unreachable => "unreachable",
             SetupError::NotSimpleDesk => "not-simpledesk",
         }
@@ -39,6 +41,9 @@ pub fn is_server_set_up() -> bool {
 /// and API server are all that address, over WebSocket on port 443.
 pub fn set_up_server(address: &str) -> Result<(), SetupError> {
     let host = normalize_address(address).ok_or(SetupError::Invalid)?;
+    if !hbb_common::simpledesk::is_server_allowed(&host) {
+        return Err(SetupError::NotAllowed);
+    }
     let key = fetch_server_key(&host)?;
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let mut options = crate::ipc::get_options();
@@ -216,5 +221,25 @@ mod tests {
         ] {
             assert_eq!(key_from_server_info(body), None, "{body}");
         }
+    }
+
+    #[test]
+    fn refuses_servers_that_are_not_allowed() {
+        use hbb_common::config::Config;
+
+        let evil = "evil.example";
+        if hbb_common::simpledesk::is_server_allowed(evil) {
+            // Built with SIMPLEDESK_ALLOWED_SERVERS empty: every server is allowed.
+            return;
+        }
+        assert_eq!(set_up_server(evil), Err(SetupError::NotAllowed));
+        Config::set_option(keys::OPTION_CUSTOM_RENDEZVOUS_SERVER.to_owned(), evil.to_owned());
+        Config::set_option(keys::OPTION_RELAY_SERVER.to_owned(), format!("{evil}:21117"));
+        assert!(!Config::get_rendezvous_server().contains(evil));
+        assert!(!Config::get_option(keys::OPTION_RELAY_SERVER).contains(evil));
+        assert_eq!(
+            crate::common::get_api_server(format!("https://{evil}"), String::new()),
+            ""
+        );
     }
 }
